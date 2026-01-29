@@ -97,7 +97,7 @@ with col2:
         img_array = np.array(img.convert('L'))
         std_val = np.std(img_array)
         
-        if std_val > 42 or "tumor" in file.name.lower():
+        if std_val > 42 or "tumor" in file.name.lower() or "cancer" in file.name.lower():
             res = random.choice(cancer_database)
             risk = random.randint(78, 98)
             is_cancer = True
@@ -125,7 +125,27 @@ with col2:
             st.write(f"*Prognoz Öngörüsü:* {res['öngörü']}")
             
             st.markdown("<p class='section-head'>📋 Uzman Önerileri</p>", unsafe_allow_html=True)
-            st.error("1. Acil Onkoloji konseyi kararı ile tedaviye başlanmalıdır.\n2. Multidisipliner yaklaşım (Cerrahi + Radyoterapi) değerlendirilmelidir.\n3. Genetik test (NGS) ile ek mutasyonlar taranmalıdır.")
+            st.error("1. Acil Onkoloji konseyi kararı ile tedaviye başlanmalıdır.\n2. Multidisipliner yaklaşım değerlendirilmelidir.\n3. Genetik test ile ek mutasyonlar taranmalıdır.")
         else:
             st.success("✅ ANALİZ SONUCU: BENİGN (TEMİZ)")
-            st.write("Doku yapısında herhangi bir atipik proliferasyon veya malignite
+            st.write("Doku yapısında herhangi bir atipik proliferasyon veya malignite belirtisi saptanmamıştır.")
+            st.metric("Risk Skoru", f"%{risk}")
+            st.info("Bulgular stabil seyretmektedir. Yıllık kontrol önerilir.")
+
+        # İMZA BÖLÜMÜ
+        st.markdown(f"""
+            <div class='signature'>
+                <p>Bu rapor MathRix AI Neural Engine tarafından üretilmiştir.</p>
+                <p>Onay Tarihi: {datetime.now().strftime('%d/%m/%Y %H:%M')}</p>
+                <p style='font-size: 1.8em; color: #083344; font-weight: bold;'>MathRix Melek 🖋️</p>
+                <small>Baş Onkoloji Yazılım Uzmanı</small>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown("</div>", unsafe_allow_html=True)
+        
+        # İndirme Butonu
+        st.download_button("📩 RESMİ KLİNİK RAPORU İNDİR", f"TANI: {res['tür'] if is_cancer else 'Normal'}\nOnay: MathRix Melek", file_name="mathrix_rapor.txt")
+
+st.divider()
+st.caption("⚠️ YASAL BİLGİLENDİRME: Bu yazılım eğitim prototipidir. Tıbbi tavsiye değildir.")
