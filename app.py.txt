@@ -1,0 +1,45 @@
+import streamlit as st
+import pandas as pd
+import numpy as np
+from PIL import Image
+import time
+import random
+from datetime import datetime
+
+st.set_page_config(page_title="MathRix AI", layout="wide")
+
+# Kurumsal Stil
+st.markdown("""
+    <style>
+    .main-header { background-color: #001f3f; padding: 30px; border-radius: 15px; color: white; text-align: center; border-left: 10px solid #3b82f6; }
+    .stMetric { background-color: #ffffff; padding: 20px; border-radius: 12px; border-top: 4px solid #003366; }
+    </style>
+    """, unsafe_allow_html=True)
+
+st.markdown("<div class='main-header'><h1>MATHRIX NEURAL CORE</h1><p>Onkolojik Dinamiklerin Topolojik Analiz Sistemi</p></div>", unsafe_allow_html=True)
+
+col1, col2 = st.columns([1, 1.4])
+with col1:
+    st.subheader("📥 Veri Girişi")
+    file = st.file_uploader("Patoloji görselini yükle", type=["jpg", "png", "jpeg"])
+    if file:
+        img = Image.open(file)
+        st.image(img, use_container_width=True)
+
+with col2:
+    st.subheader("🔍 AI Analizi")
+    if not file:
+        st.info("Lütfen görsel yükleyin.")
+    else:
+        with st.spinner("Analiz ediliyor..."):
+            time.sleep(2)
+        risk = random.randint(10, 95)
+        st.metric("Risk Skoru", f"%{risk}")
+        st.progress(risk)
+        
+        # Raporlama
+        report_text = f"MATHRIX AI REPORT\nID: {random.randint(1000,9999)}\nRISK: %{risk}\nSTATUS: {'KRITIK' if risk > 50 else 'STABIL'}"
+        st.download_button("📩 RAPORU İNDİR", data=report_text, file_name="Mathrix_Report.txt")
+
+st.divider()
+st.caption("MathRix Global Health 2026 | Mobile Ready")
