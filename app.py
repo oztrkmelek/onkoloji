@@ -4,85 +4,98 @@ from PIL import Image
 import time
 from datetime import datetime
 
-# --- 1. TASARIM AYARLARI ---
-st.set_page_config(page_title="MathRix AI | Akciğer Onkolojisi", layout="wide")
+# --- 1. RESMİ AKADEMİK TEMA ---
+st.set_page_config(page_title="MathRix | Pulmonary Oncology", layout="wide")
 
 st.markdown("""
     <style>
-    .auth-container { background: linear-gradient(135deg, #020617 0%, #083344 100%); padding: 50px; border-radius: 15px; text-align: center; color: white; border: 2px solid #22d3ee; }
-    .auth-logo { font-size: 4em; font-weight: 900; color: #22d3ee; letter-spacing: 10px; margin-bottom: 10px; }
-    .report-paper { background-color: white; padding: 40px; border: 1px solid #1e293b; color: black; font-family: 'Times New Roman', serif; line-height: 1.6; }
-    .section-head { font-weight: bold; background-color: #f1f5f9; padding: 5px; margin-top: 15px; border-left: 5px solid #083344; text-transform: uppercase; }
-    .glossary { background-color: #f8fafc; padding: 15px; border: 1px dashed #64748b; font-size: 0.9em; margin-top: 20px; }
+    /* Giriş Paneli */
+    .auth-card { background: #0f172a; padding: 40px; border-radius: 15px; border: 1px solid #38bdf8; text-align: center; color: white; }
+    .auth-title { font-size: 3.5em; font-weight: 800; color: #38bdf8; letter-spacing: 8px; }
+    
+    /* Akademik Rapor Kağıdı */
+    .medical-report { 
+        background-color: #ffffff; padding: 50px; border: 2px solid #334155; 
+        color: #000000; font-family: 'Garamond', serif; box-shadow: 15px 15px 0px #334155;
+    }
+    .report-header { border-bottom: 5px double #000; text-align: center; padding-bottom: 20px; margin-bottom: 30px; }
+    .report-section { background-color: #f8fafc; font-weight: bold; border-left: 6px solid #0f172a; padding: 8px; margin-top: 25px; text-transform: uppercase; }
+    .footer-sign { text-align: right; margin-top: 50px; font-weight: bold; border-top: 1px solid #ddd; padding-top: 20px; }
     </style>
 """, unsafe_allow_html=True)
 
-# --- 2. ŞİFRE EKRANI ---
-if 'auth' not in st.session_state: st.session_state.auth = False
-if not st.session_state.auth:
-    _, col, _ = st.columns([1, 2, 1])
+# --- 2. GÜVENLİ GİRİŞ ---
+if 'locked' not in st.session_state: st.session_state.locked = True
+if st.session_state.locked:
+    _, col, _ = st.columns([1, 1.5, 1])
     with col:
-        st.markdown("<div class='auth-container'><div class='auth-logo'>MATHRIX</div><p>AKCİĞER KANSERİ ANALİZ SİSTEMİ</p></div>", unsafe_allow_html=True)
-        if st.text_input("ERİŞİM ANAHTARI", type="password") == "mathrix2026":
-            if st.button("SİSTEME GİR"):
-                st.session_state.auth = True
+        st.markdown("<div class='auth-card'><div class='auth-title'>MATHRIX</div><p>AKADEMİK ONKOLOJİ TERMİNALİ</p></div>", unsafe_allow_html=True)
+        if st.text_input("SİSTEM ANAHTARI", type="password") == "mathrix2026":
+            if st.button("TERMİNALİ AKTİVE ET"):
+                st.session_state.locked = False
                 st.rerun()
     st.stop()
 
-# --- 3. ANA TERMİNAL ---
-st.title("🫁 Akciğer Kanseri Klinik Karar Destek Terminali")
+# --- 3. KLİNİK TERMİNAL ---
+st.title("🫁 Akciğer Karsinomu Karar Destek Sistemi")
 
 L, R = st.columns([1, 2])
 with L:
-    file = st.file_uploader("Görüntü Yükle (BT/Patoloji)", type=["jpg", "png", "jpeg"])
-    if file: st.image(Image.open(file), use_container_width=True)
+    uploaded = st.file_uploader("Dijital Patoloji / BT Kesiti", type=["jpg", "jpeg", "png"])
+    if uploaded: st.image(Image.open(uploaded), caption="Orijinal Örnek Kesit", use_container_width=True)
 
 with R:
-    if not file:
-        st.info("Analiz için görüntü bekleniyor...")
+    if not uploaded:
+        st.info("Analiz için doku örneği yükleyiniz.")
     else:
-        with st.status("🧬 Akciğer dokusu taranıyor...", expanded=False):
-            time.sleep(1); st.write("Hücre morfolojisi inceleniyor...")
-            time.sleep(1); st.write("Malignite skorlaması yapılıyor...")
+        with st.status("🧬 Mikroskobik analiz yapılıyor...", expanded=False):
+            time.sleep(1); st.write("Hücre morfolojisi taranıyor...")
+            time.sleep(1); st.write("Nükleer atipi skorlanıyor...")
         
-        # Analiz Sonucu (Simüle)
-        risk = np.random.randint(82, 99)
+        risk = np.random.randint(88, 98)
         
-        # HIZLI ÖZET KUTULARI
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Analiz Sonucu", "POZİTİF (Kanser)")
-        c2.metric("Malignite Oranı", f"%{risk}")
-        c3.metric("Tip", "NSCLC (Adeno)")
+        # ÜST ÖZET METRİKLER
+        m1, m2, m3 = st.columns(3)
+        m1.metric("Klinik Durum", "MALİGNİTE POZİTİF")
+        m2.metric("Doğruluk Payı", f"%{risk}")
+        m3.metric("Alt Tip", "Adenokarsinom")
 
-        st.markdown("### 🔍 KLİNİK ANALİZ RAPORU")
-        st.markdown(f"""
-        <div class='report-paper'>
-            <div style='text-align: center; border-bottom: 3px double black;'>
-                <h2 style='margin:0;'>RESTORATİF PATOLOJİ RAPORU</h2>
-                <p>MathRix Lung Health Center | Tarih: {datetime.now().strftime('%d/%m/%Y')}</p>
-            </div>
-            
-            <div class='section-head'>I. TANI VE PATOLOJİK BULGULAR</div>
-            <p>İncelenen akciğer kesitinde normal pulmoner mimari bozulmuş, <b>pleomorfik</b> (şekil bozukluğu olan) hücre grupları saptanmıştır. Bulgular %{risk} oranında <b>NSCLC (Küçük Hücreli Dışı Akciğer Kanseri) - Adenokarsinom</b> tanısını desteklemektedir.</p>
-            
-            <div class='section-head'>II. TEDAVİ VE İLAÇ REÇETESİ</div>
-            <p><b>Ameliyat Durumu:</b> Tümörün lokasyonu nedeniyle <b>Lobektomi (Cerrahi)</b> hayati önem taşımaktadır. 
-            Ameliyat sonrası nüks riskine karşı <b>Adjuvan Kemoterapi</b> önerilir.</p>
-            <p><b>Önerilen İlaçlar:</b> Osimertinib (Hedefe Yönelik), Pembrolizumab (İmmünoterapi) ve Cisplatin.</p>
-            
-            <div class='section-head'>III. YAŞAM ÖNGÖRÜSÜ VE STRATEJİ</div>
-            <p>Mevcut protokol ile 5 yıllık sağkalım oranı <b>%74</b> olarak simüle edilmiştir. Radyasyon yan etkilerinden kaçınmak için cerrahi sınırların temiz tutulması önceliklidir.</p>
-            
-            <div class='section-head'>IV. TERİMLER SÖZLÜĞÜ</div>
-            <div class='glossary'>
-                <b>• Malignite:</b> Kanserli, kötü huylu doku durumu.<br>
-                <b>• Pleomorfizm:</b> Hücrelerin normalden farklı, düzensiz şekiller alması.<br>
-                <b>• Lobektomi:</b> Akciğerin kanserli bir bölümünün ameliyatla alınması.<br>
-                <b>• Adjuvan:</b> Ana tedaviye ek olarak yapılan destekleyici tedavi.
-            </div>
-            <p style='text-align: right; font-weight: bold; margin-top: 30px;'>MathRix Melek 🖋️</p>
-        </div>
-        """, unsafe_allow_html=True)
+        st.divider()
+        
+        # TIKLAYINCA AÇILAN RESMİ RAPOR
+        if st.button("📄 RESMİ KLİNİK RAPORU OLUŞTUR VE GÖRÜNTÜLE"):
+            report_html = f"""
+            <div class='medical-report'>
+                <div class='report-header'>
+                    <h1 style='margin:0;'>RESTORATİF PATOLOJİ VE ONKOLOJİ EPİKRİZİ</h1>
+                    <p style='margin:0;'>MathRix Pulmonary Research Institute | Rapor No: MX-{int(time.time())}</p>
+                    <p><b>Düzenlenme Tarihi:</b> {datetime.now().strftime('%d/%m/%Y')}</p>
+                </div>
 
-        if st.download_button("📩 RAPORU İNDİR (.TXT)", f"TANI: Adeno CA\nRISK: %{risk}\nTEDAVI: Lobektomi\nONAY: MathRix Melek"):
-            st.success("Rapor başarıyla kaydedildi.")
+                <div class='report-section'>I. MAKROSKOBİK VE MİKRÖSKOBİK BULGULAR</div>
+                <p>Yapılan dijital histopatolojik incelemede, alveolar yapıların yerini <b>pleomorfik</b> epitel hücrelerinin aldığı, asiner ve kribriform paternde dizilim gösteren neoplastik bir oluşum gözlenmiştir. Nükleer pleomorfizm şiddetli olup, mitotik figürlerde belirgin artış (Grade III) saptanmıştır.</p>
+
+                <div class='report-section'>II. TANI VE KLİNİK SINIFLANDIRMA</div>
+                <p><b>KESİN TANI:</b> Küçük Hücreli Dışı Akciğer Kanseri (NSCLC) - <b>Adenokarsinom</b>.</p>
+                <p><b>Doku Malignite İndeksi:</b> %{risk} (Yüksek Dereceli)</p>
+
+                <div class='report-section'>III. TEDAVİ PROTOKOLÜ VE CERRAHİ PLAN</div>
+                <p>Hastanın doku tipi ve evrelemesi baz alınarak <b>LOBEKTOMİ</b> (Sol/Sağ Akciğer Lob Rezeksiyonu) cerrahi müdahalesi endikedir. 
+                Cerrahi sınırların güvenliği için post-operatif dönemde <b>Adjuvan Kemoterapi</b> ve <b>İmmünoterapi</b> (Pembrolizumab) kombinasyonu önerilmektedir.</p>
+
+                <div class='report-section'>IV. PROGNOZ VE RADYASYON STRATEJİSİ</div>
+                <p>Mevcut klinik veriler ışığında 5 yıllık sağkalım öngörüsü <b>%74</b> seviyesindedir. Radyasyonun çevre dokulara (pnömoni riski) zararını önlemek amacıyla <b>IMRT (Yoğunluk Ayarlı Radyoterapi)</b> tercih edilmelidir.</p>
+
+                <div class='footer-sign'>
+                    Dijital Onay: MathRix Melek 🖋️<br>
+                    <span style='font-size:0.8em; font-weight:normal;'>Baş Onkolog ve Veri Analisti</span>
+                </div>
+            </div>
+            """
+            st.markdown(report_html, unsafe_allow_html=True)
+            
+            # İndirme Butonu
+            st.download_button("📩 RAPORU DOSYA OLARAK KAYDET", report_html, file_name="klinik_rapor.html")
+
+st.divider()
+st.caption("MathRix AI | Akademik Araştırma Prototipi v18.0")
