@@ -1,4 +1,50 @@
-import streamlit as st
+[02:01, 30.01.2026] Melegim: import streamlit as st
+import numpy as np
+from PIL import Image
+import time
+from datetime import datetime
+
+# --- 1. RESMİ AKADEMİK TEMA ---
+st.set_page_config(page_title="MathRix | Pulmonary Oncology", layout="wide")
+
+st.markdown("""
+    <style>
+    .auth-card { background: #020617; padding: 50px; border-radius: 20px; border: 2px solid #38bdf8; text-align: center; color: white; }
+    .auth-title { font-size: 4em; font-weight: 900; color: #38bdf8; letter-spacing: 12px; text-shadow: 0 0 20px #38bdf8; }
+    
+    .medical-report { 
+        background-color: #ffffff; padding: 60px; border: 2px solid #000; 
+        color: #000; font-family: 'Times New Roman', serif; line-height: 1.8;
+        box-shadow: 15px 15px 0px #334155; margin-top: 20px;
+    }
+    .report-he…
+[02:03, 30.01.2026] Melegim: import streamlit as st
+import numpy as np
+from PIL import Image
+import time
+import random
+from datetime import datetime
+
+# --- SİSTEM AYARLARI ---
+st.set_page_config(page_title="MathRix AI | Lung Oncology", layout="wide")
+
+# Giriş Şifresi: mathrix2026
+if 'giris' not in st.session_state: st.session_state.giris = False
+if not st.session_state.giris:
+    _, col, _ = st.columns([1, 2, 1])
+    with col:
+        st.title("MATHRIX GİRİŞ")
+        sifre = st.text_input("Sistem Anahtarı", type="password")
+        if st.button("Sistemi Aktif Et"):
+            if sifre == "mathrix2026":
+                st.session_state.giris = True
+                st.rerun()
+            else: st.error("Hatalı Şifre")
+    st.stop()
+
+# --- ANA PANEL ---
+st.title("🫁 Akciğer Kanseri Klini…
+[02:03, 30.01.2026] Melegim: import streamlit as st
 import numpy as np
 from PIL import Image
 import time
@@ -80,8 +126,7 @@ with sag:
         Radyasyonun çevre dokulara vereceği zararı (radyasyon pnömonisi) minimize etmek için *IMRT (Yoğunluk Ayarlı Radyoterapi)* tekniği önerilir.
         
         ---
-        *DİJİTAL ONAY:* MathRix Melek 🖋️
-        *ÜNVAN:* Baş Onkolog ve Klinik Veri Analisti
+        *DİJİTAL ONAY:* MathRix Melek 
         """
         
         # Ekrana basıyoruz
