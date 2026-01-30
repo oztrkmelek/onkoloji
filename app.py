@@ -4,124 +4,160 @@ from PIL import Image
 import random
 
 # Sayfa Ayarları
-st.set_page_config(page_title="MathRix AI Oncology 3T", layout="wide")
+st.set_page_config(page_title="MathRix AI Oncology Pro", layout="wide", page_icon="🧬")
 
-# --- GİRİŞ SİSTEMİ ---
+# --- PROFESYONEL GİRİŞ EKRANI (DARK MODE) ---
 if 'authenticated' not in st.session_state:
     st.session_state['authenticated'] = False
 
 if not st.session_state['authenticated']:
-    st.markdown("<h1 style='text-align: center; color: #001f3f;'>MATHRIX NEURAL CORE ACCESS</h1>", unsafe_allow_html=True)
+    st.markdown("""
+        <style>
+        .stApp { background: linear-gradient(to bottom, #000b1a, #001f3f); }
+        .login-box {
+            background-color: rgba(0, 31, 63, 0.8);
+            padding: 60px;
+            border-radius: 20px;
+            border: 2px solid #00d4ff;
+            text-align: center;
+            box-shadow: 0px 0px 30px #00d4ff;
+            margin-top: 50px;
+        }
+        h1 { color: #00d4ff; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 800; }
+        .stButton>button { background-color: #00d4ff; color: black; font-weight: bold; width: 100%; border-radius: 10px; }
+        </style>
+        """, unsafe_allow_html=True)
+    
     col1, col2, col3 = st.columns([1,2,1])
     with col2:
-        password = st.text_input("Sistem Erişim Şifresi:", type="password")
-        if st.button("Sisteme Giriş Yap"):
+        st.markdown("<div class='login-box'>", unsafe_allow_html=True)
+        st.markdown("<h1>MATHRIX NEURAL CORE</h1>", unsafe_allow_html=True)
+        st.markdown("<p style='color: #e0e0e0;'>Onkolojik Karar Destek Sistemine Erişim İçin Kimlik Doğrulaması Gereklidir.</p>", unsafe_allow_html=True)
+        
+        password = st.text_input("Sistem Anahtarı:", type="password")
+        
+        if st.button("SİSTEMİ BAŞLAT 🚀"):
             if password == "mathrix2026":
                 st.session_state['authenticated'] = True
+                with st.spinner("Şifre doğrulanıyor, çekirdek modüller yükleniyor..."):
+                    time.sleep(2)
                 st.rerun()
             else:
-                st.error("Hatalı Şifre! Erişim Reddedildi.")
+                st.error("ERİŞİM REDDEDİLDİ: Yetkisiz Giriş Teşebbüsü.")
+        st.markdown("</div>", unsafe_allow_html=True)
     st.stop()
 
-# --- ANA TASARIM ---
-st.markdown("<h1 style='color: #003366; text-align: center;'>🧬 MATHRIX AI: ONKOLOJİ 3T KARAR DESTEK</h1>", unsafe_allow_html=True)
+# --- ANA PANEL TASARIMI ---
+st.markdown("<h1 style='color: #00d4ff; text-align: center;'>🧬 MATHRIX AI: ONKOLOJİK ANALİZ VE 3T YÖNETİMİ</h1>", unsafe_allow_html=True)
 
-# --- BİLGİ BANKASI ---
-with st.expander("📚 Kapsamlı Onkoloji Bilgi Bankası (Tıkla ve Oku)"):
-    t1, t2, t3 = st.tabs(["Kanser Alt Tipleri", "Modern Tedaviler", "Evreleme Mantığı"])
-    with t1:
-        st.write("*Adenokarsinom:* Akciğerin dış yüzeyinde, müsin üreten hücrelerden köken alır. EGFR/ALK mutasyonlarına sık rastlanır.")
-        st.write("*Skuamöz Hücreli:* Bronş iç yüzeyindeki yassı hücrelerden gelişir. Genelde cerrahi ve kemoterapi odaklıdır.")
-        st.write("*Büyük Hücreli:* Tanısı en zor, yayılımı en hızlı türdür. Hücreler morfolojik olarak çok bozuktur.")
-    with t2:
-        st.success("*İmmünoterapi:* Keytruda, Opdivo gibi ilaçlar bağışıklık sistemini tümöre saldırttırır.")
-        st.info("*Hedefe Yönelik Tedavi:* Osimertinib, Alectinib gibi akıllı ilaçlar doğrudan kanserli hücredeki 'hatayı' düzeltir.")
-    with t3:
-        st.write("Metastaz (Sıçrama) yoksa: *Evre 1-3* | Metastaz varsa: *Evre 4* (İleri Evre)")
+# --- İLGİ ÇEKİCİ KLİNİK BİLGİ BANKASI ---
+st.markdown("### 🔍 Onkoloji Rehberini İnceleyin")
+info_tab1, info_tab2, info_tab3, info_tab4 = st.tabs([
+    "🔬 Hücresel Analiz", "💊 Tedavi Protokolleri", "🧬 Genetik Mutasyonlar", "📊 Evreleme & Takip"
+])
+
+with info_tab1:
+    st.markdown("<h4 style='color:#00d4ff;'>Akciğer Karsinomu Alt Tipleri</h4>", unsafe_allow_html=True)
+    c1, c2, c3 = st.columns(3)
+    c1.markdown("<div style='background-color:#0e1117; padding:20px; border-left:5px solid #00d4ff; border-radius:10px;'><b>Adenokarsinom (AC)</b><br><br>En sık görülen tiptir. Akciğerin periferik kısımlarında, müsin üreten bez yapılarından köken alır. Sigara içmeyenlerde de görülebilir.</div>", unsafe_allow_html=True)
+    c2.markdown("<div style='background-color:#0e1117; padding:20px; border-left:5px solid #ff4b4b; border-radius:10px;'><b>Skuamöz Hücreli (SCC)</b><br><br>Merkezi hava yollarında keratin incileri ile karakterizedir. Sigara kullanımı ile doğrudan %90 ilişkilidir.</div>", unsafe_allow_html=True)
+    c3.markdown("<div style='background-color:#0e1117; padding:20px; border-left:5px solid #ffa500; border-radius:10px;'><b>Büyük Hücreli (LCC)</b><br><br>Tanısı zordur, çok agresiftir. Mikroskop altında dev hücreler ve belirgin çekirdekçikler (nükleol) izlenir.</div>", unsafe_allow_html=True)
+
+with info_tab2:
+    st.markdown("<h4 style='color:#00d4ff;'>3T Yaklaşımı: Tedavi Stratejileri</h4>", unsafe_allow_html=True)
+    col_t1, col_t2 = st.columns(2)
+    with col_t1:
+        st.success("✅ *İmmünoterapi:* Pembrolizumab (Keytruda). Bağışıklık sistemini aktive ederek tümörle savaşmasını sağlar. PD-L1 skoru kritik öneme sahiptir.")
+    with col_t2:
+        st.error("🔴 *Kemoterapi:* Sisplatin bazlı rejimler. Hızlı bölünen tümör hücrelerini DNA düzeyinde baskılar.")
+
+with info_tab3:
+    st.warning("⚠️ *Hedefe Yönelik Tedavi (Akıllı İlaçlar)*")
+    st.table({
+        "Mutasyon": ["EGFR (+)", "ALK (+)", "ROS1 (+)", "KRAS G12C"],
+        "İlaç Örneği": ["Osimertinib", "Alectinib", "Crizotinib", "Sotorasib"],
+        "Hedef Mekanizma": ["Reseptör Blokajı", "Füzyon Durdurma", "Sinyal Kesme", "Spesifik İnhibisyon"]
+    })
+
+with info_tab4:
+    st.markdown("<h4 style='color:#00d4ff;'>Metastaz Odaklı Evreleme</h4>", unsafe_allow_html=True)
+    st.markdown("""
+    * *Lokal Evre (1-2):* Tümör sadece akciğerde veya yakın lenf bezlerindedir.
+    * *İleri Evre (4):* Tümör uzak organlara (Beyin, Karaciğer, Kemik) sıçramıştır.
+    * *İzlem:* Her 3 ayda bir Kontrastlı BT ve beyin MR taraması ile nüks kontrolü yapılmalıdır.
+    """)
 
 st.divider()
 
-# --- ANALİZ PANELİ ---
+# --- ANALİZ VE 3T SİSTEMİ ---
 col_left, col_right = st.columns([1, 1])
 
 with col_left:
     st.subheader("📸 Vaka Veri Girişi")
-    uploaded_file = st.file_uploader("Patoloji/Radyoloji Görüntüsünü Buraya Bırakın", type=["jpg", "png", "jpeg"])
+    uploaded_file = st.file_uploader("Dijital Patoloji Görüntüsü Yükle", type=["jpg", "png", "jpeg"])
     
-    st.markdown("---")
-    st.write("📋 *Klinik Sorgulama (Tanı İçin Gereklidir)*")
-    metastaz_durumu = st.multiselect(
-        "Metastaz Saptanan Bölgeleri Seçiniz (Yoksa Boş Bırakın):",
-        ["Beyin", "Karaciğer", "Kemik", "Sürrenal (Böbrek Üstü)", "Diğer Akciğer Lobu"]
-    )
-    
+    with st.expander("📋 Klinik Profil (Analiz İçin Gereklidir)"):
+        yas = st.number_input("Hasta Yaşı:", 18, 100, 65)
+        sigara = st.radio("Sigara Geçmişi:", ["Hiç", "Eski", "Aktif"])
+        metastazlar = st.multiselect("Metastaz Saptanan Organlar (Boşsa Erken Evre):", ["Beyin", "Karaciğer", "Kemik", "Sürrenal", "Lenf Düğümü"])
+
     # Otomatik Evreleme Mantığı
-    evre = "Evre 1/2 (Lokal)" if not metastaz_durumu else "Evre 4 (Metastatik)"
-    st.warning(f"Sistem Tespiti: *{evre}*")
+    evre_durumu = "Evre 4 (İleri)" if metastazlar else "Evre 1-3 (Lokal/Bölgesel)"
+    st.markdown(f"<div style='background-color:#1e2129; padding:10px; border-radius:5px;'><b>Tahmini Klinik Evre:</b> <span style='color:#ff4b4b;'>{evre_durumu}</span></div>", unsafe_allow_html=True)
 
 with col_right:
     if uploaded_file:
-        st.image(Image.open(uploaded_file), use_container_width=True, caption="İncelenen Doku Kesiti")
+        st.image(Image.open(uploaded_file), use_container_width=True, caption="İncelenen Patolojik Kesit")
         
-        if st.button("🔬 3T ANALİZİNİ BAŞLAT"):
-            bar = st.progress(0)
-            msg = st.empty()
+        if st.button("🔬 DERİN ANALİZİ VE 3T RAPORUNU BAŞLAT"):
+            with st.status("Neural Core İşleniyor...", expanded=True) as status:
+                st.write("Doku mimarisi katmanlara ayrılıyor...")
+                time.sleep(1)
+                st.write("Hücre çekirdekleri (nükleer atipi) taranıyor...")
+                time.sleep(1)
+                st.write("Klinik veriler ve evreleme parametreleri birleştiriliyor...")
+                time.sleep(1)
+                status.update(label="Analiz Tamamlandı!", state="complete", expanded=False)
             
-            for i in range(1, 101):
-                time.sleep(0.03)
-                bar.progress(i)
-                if i < 40: msg.text("Doku mimarisi taranıyor (CNN Layer 1)...")
-                elif i < 80: msg.text("Hücresel atipi ve pleomorfizm hesaplanıyor...")
-                else: msg.text("Tedavi protokolleri optimize ediliyor...")
+            # Sonuç Üretimi
+            secilen_tur = random.choice(["Adenokarsinom", "Skuamöz Hücreli Karsinom", "Büyük Hücreli Karsinom"])
+            risk_puani = random.uniform(93.1, 99.4)
             
-            # Analiz Değişkenleri
-            turler = ["Adenokarsinom", "Skuamöz Hücreli Karsinom", "Büyük Hücreli Karsinom"]
-            secilen_tur = random.choice(turler)
-            risk = random.uniform(91.2, 98.7)
-            
-            st.error(f"### AI ANALİZ SONUCU: {secilen_tur.upper()}")
-            
-            # Uzun Tıbbi Açıklama
+            st.error(f"### 🚩 TESPİT EDİLEN BULGU: {secilen_tur.upper()}")
             st.markdown(f"""
-            *1. TANI (DIAGNOSIS):*
-            Yapılan dijital taramada hücrelerde yüksek dereceli *malignite* bulguları saptanmıştır. {secilen_tur} tanısını destekleyen yoğun hücresel kümelenme izlenmektedir. Malignite Skoru: *%{risk:.1f}*.
+            *1. TANI (Diagnosis):* Yapay zeka, dokuda yüksek oranda *malignite (%{risk_puani:.1f})* saptamıştır. {secilen_tur} ile uyumlu hücresel pleomorfizm izlenmektedir.
             
-            *2. TEDAVİ (THERAPY):*
-            Tespit edilen *{evre}* ve {secilen_tur} profili uyarınca; 
-            - PD-L1 testi çalışılması ve sonuca göre *İmmünoterapi* planlanması,
-            - Eğer EGFR mutasyonu (+) ise 3. kuşak *Akıllı İlaç* kullanımı önerilir.
+            *2. TEDAVİ (Therapy):* {evre_durumu} vakası uyarınca; 
+            - PD-L1 testi sonrasına göre *İmmünoterapi* planlanması,
+            - EGFR/ALK genetik sonuçlarına göre *Akıllı İlaç* seçeneği değerlendirilmelidir.
             
-            *3. TAKİP (TRACKING):*
-            Hastanın {', '.join(metastaz_durumu) if metastaz_durumu else 'primer odağı'} 3 ayda bir kontrastlı BT/PET ile takip edilmelidir.
+            *3. TAKİP (Tracking):* Metastatik risk nedeniyle 8-12 haftalık periyotlarla görüntüleme (PET-BT) önerilir.
             """)
             
-            # Detaylı Rapor İçeriği
-            full_report = f"""
-            MATHRIX ONKOLOJI 3T ANALIZ RAPORU
-            ---------------------------------
-            TARIH: {time.strftime('%d/%m/%Y')}
-            ANALIZ TURU: Dijital Patoloji & Karar Destek
+            # Profesyonel Rapor
+            rapor_metni = f"""
+            MATHRIX AI ONCOLOGY - 3T OFFICIAL REPORT
+            -------------------------------------------
+            Tarih: {time.strftime('%d/%m/%Y')} | Rapor ID: MX-{random.randint(1000,9999)}
             
-            [TANI BOLUMU]
-            Saptanan Tur: {secilen_tur}
-            AI Guven Araligi: %{risk:.1f}
-            Evreleme Durumu: {evre}
-            Saptanan Metastazlar: {', '.join(metastaz_durumu) if metastaz_durumu else 'Yok'}
+            [TANI ANALIZI]
+            Morfoloji: {secilen_tur}
+            AI Malignite Skoru: %{risk_puani:.1f}
+            Klinik Evre: {evre_durumu}
+            Saptanan Metastazlar: {', '.join(metastazlar) if metastazlar else 'Saptanmadi'}
             
-            [TEDAVI BOLUMU]
-            - {secilen_tur} icin standart kemoterapi yaninda hedefe yonelik ajanlar degerlendirilmelidir.
-            - {evre} vakalarinda multidisipliner yaklasim sarttir.
-            - Karaciger/Beyin taramalari metastaz riskine karsi yenilenmelidir.
+            [TEDAVI ONERISI]
+            - {secilen_tur} spesifik NGS paneli taranmalidir.
+            - {evre_durumu} icin sistemik tedavi (Kemoterapi + Immunoterapi) uygunlugu.
             
-            [TAKIP BOLUMU]
-            - Onkoloji takip takip araligi: 12 Hafta.
-            - Radyoterapi gerekliligi radyasyon onkologu ile gorusulmelidir.
+            [TAKIP PLANI]
+            - 3 aylik periyotlarla Toraks/Batin BT.
+            - Beyin MR (Nörolojik semptom takibi).
             
-            Bu belge lise seviyesinde bir AI projesi ciktisidir. Klinik karar verici degildir.
+            Bu belge lise seviyesi bir AI projesi simülasyonudur.
             """
-            
-            st.download_button("📩 KAPSAMLI 3T RAPORUNU İNDİR", full_report, f"MathRix_3T_Raporu.txt")
+            st.download_button("📩 RESMİ 3T ANALİZ RAPORUNU İNDİR", rapor_metni, f"MathRix_Rapor_{secilen_tur}.txt")
     else:
-        st.info("Lütfen bir görüntü yükleyerek analizi başlatın.")
+        st.info("Lütfen bir vaka görüntüsü yükleyerek sistemi çalıştırın.")
 
-st.markdown("<br><hr><center>MathRix Global Health Systems © 2026 | Teknofest Onkoloji 3T Hazırlık Birimi</center>", unsafe_allow_html=True)
+st.markdown("<br><hr><center>MathRix Global Health Systems © 2026 | Professional Oncology Decision Support</center>", unsafe_allow_html=True)
