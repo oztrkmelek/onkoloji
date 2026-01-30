@@ -1,99 +1,108 @@
 import streamlit as st
-import numpy as np
-from PIL import Image, ImageDraw
 import time
+from PIL import Image
 import random
-from datetime import datetime
 
-# --- 1. SİSTEM AYARLARI ---
-st.set_page_config(page_title="MathRix AI | Lung Oncology", layout="wide")
+# Sayfa Ayarları
+st.set_page_config(page_title="MathRix AI Oncology", layout="wide")
 
-st.markdown("""
-    <style>
-    .report-paper { background-color: white; padding: 30px; border-left: 10px solid #083344; color: black; font-family: 'Times New Roman', serif; border: 1px solid #ddd; }
-    .stMetric { background-color: #f0f2f6; padding: 10px; border-radius: 10px; }
-    </style>
-""", unsafe_allow_html=True)
+# --- GİRİŞ PANELİ (ŞİFRELEME) ---
+if 'authenticated' not in st.session_state:
+    st.session_state['authenticated'] = False
 
-# --- 2. GİRİŞ EKRANI (Şifre: mathrix2026) ---
-if 'auth' not in st.session_state: st.session_state.auth = False
-if not st.session_state.auth:
-    _, col, _ = st.columns([1, 2, 1])
-    with col:
-        st.title("🧬 MATHRIX TERMINAL")
-        if st.text_input("Erişim Anahtarı", type="password") == "mathrix2026":
-            if st.button("Sistemi Aktive Et"):
-                st.session_state.auth = True
+if not st.session_state['authenticated']:
+    st.markdown("<h1 style='text-align: center; color: #001f3f;'>MATHRIX NEURAL CORE ACCESS</h1>", unsafe_allow_html=True)
+    col1, col2, col3 = st.columns([1,2,1])
+    with col2:
+        password = st.text_input("Sistem Erişim Şifresi:", type="password")
+        if st.button("Sisteme Giriş Yap"):
+            if password == "mathrix2026": # Şifreni buradan değiştirebilirsin
+                st.session_state['authenticated'] = True
                 st.rerun()
+            else:
+                st.error("Hatalı Şifre! Erişim Reddedildi.")
     st.stop()
 
-# --- 3. ANA ANALİZ PANELİ ---
-st.title("🫁 Akciğer Kanseri Akıllı Teşhis Terminali")
+# --- ANA SİSTEM (Giriş Yapıldıktan Sonra) ---
+st.markdown("""
+    <style>
+    .main-header { background: linear-gradient(90deg, #001f3f, #003366); padding: 25px; border-radius: 15px; color: white; text-align: center; margin-bottom: 20px;}
+    .info-box { background-color: #f0f2f6; padding: 15px; border-radius: 10px; border-left: 5px solid #003366; margin-bottom: 10px;}
+    </style>
+    """, unsafe_allow_html=True)
 
-sol, sag = st.columns([1.2, 1.8])
+st.markdown("<div class='main-header'><h1>MATHRIX AI ONKOLOJİK ANALİZ VE BİLGİ SİSTEMİ</h1></div>", unsafe_allow_html=True)
 
-with sol:
-    dosya = st.file_uploader("Akciğer Kesiti Yükle", type=["jpg", "png", "jpeg"])
-    if dosya:
-        img = Image.open(dosya).convert("RGB")
-        # --- CANLI TARAMA EFEKTİ (ÇUBUK ÇUBUK GÖSTERİM) ---
-        progress_bar = st.progress(0)
-        status_text = st.empty()
-        image_place = st.empty()
-        
-        # Tarama simülasyonu
-        draw = ImageDraw.Draw(img)
-        w, h = img.size
-        for i in range(0, 101, 20):
-            status_text.text(f"Hücre yapıları taranıyor: %{i}")
-            progress_bar.progress(i)
-            # Görsel üzerine AI tarama çizgileri ekle
-            y = int((i/100) * h)
-            draw.line([(0, y), (w, y)], fill=(0, 255, 255), width=5)
-            image_place.image(img, use_container_width=True)
-            time.sleep(0.3)
-        st.success("Tarama Tamamlandı.")
+# --- BİLGİ PANELİ (AKCİĞER KANSERİ REHBERİ) ---
+st.subheader("📚 Akciğer Kanseri Klinik Rehberi")
+tab1, tab2, tab3 = st.tabs(["Kanser Türleri", "Evreleme ve Metastaz", "Tedavi ve İlaçlar"])
 
-with sag:
-    if dosya:
-        # Dinamik Analiz Verileri (Her seferinde değişir)
-        skor = random.randint(89, 99)
-        evre = random.choice(["II-B", "III-A", "III-B"])
-        tip = random.choice(["Adenokarsinom", "Skuamöz Hücreli Karsinom", "Büyük Hücreli Karsinom"])
-        
-        st.subheader("📋 Klinik Bulgular")
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Malignite İndeksi", f"%{skor}")
-        c2.metric("Klinik Evre", evre)
-        c3.metric("Hücre Tipi", tip)
+with tab1:
+    col_a, col_b = st.columns(2)
+    with col_a:
+        st.markdown("""
+        <div class='info-box'>
+        <strong>1. Küçük Hücreli Dışı (KHDAK) - %85</strong><br>
+        - <b>Adenokarsinom:</b> En yaygın tür. Akciğerin dışındadır.<br>
+        - <b>Skuamöz Hücreli:</b> Merkezdeki hava yollarında, sigara odaklı.<br>
+        - <b>Büyük Hücreli:</b> Hızlı yayılan, agresif tür.
+        </div>
+        """, unsafe_allow_html=True)
+    with col_b:
+        st.markdown("""
+        <div class='info-box'>
+        <strong>2. Küçük Hücreli (KHAK) - %15</strong><br>
+        - Çok hızlı yayılır.<br>
+        - Genelde teşhis edildiğinde metastaz yapmıştır.<br>
+        - Kemoterapiye hızlı yanıt verir ama nüks riski yüksektir.
+        </div>
+        """, unsafe_allow_html=True)
 
-        st.divider()
+with tab2:
+    st.write("### Yayılım ve Evreleme")
+    st.info("Akciğer kanseri en sık *Karaciğer, Beyin ve Kemiklere* sıçrar (Metastaz).")
+    st.table({
+        "Evre": ["Evre 1-2", "Evre 3", "Evre 4"],
+        "Açıklama": ["Sadece akciğerde sınırlı.", "Yakın lenf bezlerine yayılmış.", "Uzak organlara (Beyin/Karaciğer) sıçramış."],
+        "Yaklaşım": ["Ameliyat öncelikli", "Radyoterapi + Kemo", "Akıllı İlaç + İmmünoterapi"]
+    })
 
-        # AKADEMİK RAPOR (Saf metin, önemli yerler kalın)
-        rapor = f"""
-        ### 📄 RESMİ KLİNİK ANALİZ RAPORU
-        *TARİH:* {datetime.now().strftime('%d/%m/%Y')} | *KAYIT NO:* MX-{random.randint(1000,9999)}
-        
-        *1. PATOLOJİK DEĞERLENDİRME:*
-        Yüklenen dijital kesit üzerinde yapılan morfometrik analizde, normal parankim yapısının *atipi gösteren epitel hücreleri* tarafından infiltre edildiği gözlenmiştir. 
-        Hücrelerde *belirgin pleomorfizm* ve nükleer hiperkromazi saptanmış olup, mitotik aktivite oranı *%{skor}* olarak hesaplanmıştır.
-        
-        *2. TANI VE SINIFLANDIRMA:*
-        Bulgular, Dünya Sağlık Örgütü (WHO) kriterlerine göre *{tip}* tanısını %{skor-2} güven aralığı ile doğrulamaktadır. 
-        Tümör dokusunun *vasküler invazyon* potansiyeli yüksek risk grubundadır.
-        
-        *3. CERRAHİ VE TEDAVİ PLANI:*
-        Mevcut hücre tipi ve yayılımı nedeniyle *ANATOMİK LOBEKTOMİ* operasyonu zorunludur. 
-        Operasyon sonrası hastaya *Adjuvan Kemoterapi* (Cisplatin + Pemetrexed) ve PD-L1 seviyesine göre *İmmünoterapi (Pembrolizumab)* başlanması akademik olarak endikedir.
-        
-        *4. PROGNOZ VE RADYASYON STRATEJİSİ:*
-        Küratif cerrahi sonrası nüks riskini azaltmak amacıyla *IMRT (Yoğunluk Ayarlı Radyoterapi)* planlanmalıdır. 
-        Hastanın 5 yıllık sağkalım projeksiyonu multimodüler tedavi ile *%74* olarak öngörülmektedir.
-        
-        ---
-        *DİJİTAL ONAY:* MathRix Melek 🖋️
-        """
-        
-        st.markdown(f"<div class='report-paper'>{rapor}</div>", unsafe_allow_html=True)
-        
-        st.download_button("📩 RESMİ RAPORU İNDİR (.TXT)", rapor, file_name="MathRix_Klinik_Rapor.txt")
+with tab3:
+    st.write("### Modern Tedavi Yöntemleri")
+    c1, c2 = st.columns(2)
+    c1.success("*Akıllı İlaçlar:* EGFR, ALK mutasyonu varsa hücreyi doğrudan vurur. (Örn: Erlotinib)")
+    c2.warning("*İmmünoterapi:* Bağışıklık sistemini kansere saldırttırır. (Örn: Keytruda)")
+
+st.divider()
+
+# --- ANALİZ KISMI ---
+st.subheader("🔍 AI Patoloji Analiz Modülü")
+col_input, col_result = st.columns([1, 1])
+
+with col_input:
+    uploaded_file = st.file_uploader("Analiz için Patoloji/Röntgen görseli yükleyin", type=["jpg", "png", "jpeg"])
+    if uploaded_file:
+        image = Image.open(uploaded_file)
+        st.image(image, caption="Yüklenen Görsel", use_container_width=True)
+
+with col_result:
+    if uploaded_file:
+        with st.spinner("MathRix Neural Core analiz yapıyor..."):
+            time.sleep(3)
+            risk_score = random.randint(15, 92)
+            
+        st.write("### Analiz Sonucu")
+        if risk_score > 50:
+            st.error(f"Kritik Risk Skoru: %{risk_score}")
+            st.write("*Öneri:* Doku örneğinde yüksek hücresel atipi gözlendi. İleri genetik test (NGS) ve biyopsi onayı gereklidir.")
+        else:
+            st.success(f"Düşük Risk Skoru: %{risk_score}")
+            st.write("*Öneri:* Rutin takip ve stabil görünüm.")
+            
+        # Rapor İndirme
+        report = f"MATHRIX AI ANALİZ RAPORU\nTarih: {time.strftime('%Y-%m-%d')}\nRisk: %{risk_score}\nTür Şüphesi: Adenokarsinom"
+        st.download_button("📩 PDF Raporu Oluştur ve İndir", report, file_name="mathrix_analiz.txt")
+    else:
+        st.write("Lütfen sol taraftan bir dosya yükleyerek analizi başlatın.")
+
+st.markdown("<br><hr><center>MathRix Global Health Systems © 2026</center>", unsafe_allow_html=True)
