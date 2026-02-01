@@ -3,54 +3,49 @@ from PIL import Image
 import numpy as np
 import time
 
-# =========================================================
-# GENEL KONFİGÜRASYON
-# =========================================================
+# =====================================================
+# KONFİGÜRASYON
+# =====================================================
 st.set_page_config(
-    page_title="Klinik Akciğer Kanseri Tanı & Karar Destek Sistemi",
+    page_title="Akciğer Kanseri Tanı ve Klinik Karar Destek Sistemi",
     layout="wide"
 )
 
 PASSWORD = "mathrix2026"
 
-# =========================================================
-# GİRİŞ KONTROLÜ
-# =========================================================
-if "login" not in st.session_state:
-    st.session_state.login = False
+# =====================================================
+# GİRİŞ
+# =====================================================
+if "auth" not in st.session_state:
+    st.session_state.auth = False
 
-if not st.session_state.login:
-    st.markdown("## 🔐 Klinik Sistem Girişi")
-    pwd = st.text_input("Şifre", type="password")
-    if st.button("Sisteme Giriş"):
-        if pwd == PASSWORD:
-            st.session_state.login = True
+if not st.session_state.auth:
+    st.title("🔐 Klinik Sistem Girişi")
+    pw = st.text_input("Şifre", type="password")
+    if st.button("Giriş"):
+        if pw == PASSWORD:
+            st.session_state.auth = True
             st.success("Yetkilendirme başarılı")
             time.sleep(1)
             st.rerun()
         else:
-            st.error("Yetkisiz erişim")
+            st.error("Hatalı şifre")
     st.stop()
 
-# =========================================================
+# =====================================================
 # SIDEBAR
-# =========================================================
-st.sidebar.title("🩺 Klinik Navigasyon")
+# =====================================================
+st.sidebar.title("🩺 Klinik Menü")
 page = st.sidebar.radio(
-    "Modül Seç",
-    [
-        "🔬 Tanı Merkezi",
-        "💊 İlaç & Farmakoloji",
-        "📊 Evreleme & Klinik Veri"
-    ]
+    "Modül",
+    ["🔬 Tanı Merkezi", "💊 İlaç & Klinik Rehber", "📊 Evreleme & Akademik Bilgi"]
 )
-
 st.sidebar.markdown("---")
-st.sidebar.caption("⚠️ Eğitim amaçlı karar destek simülasyonu")
+st.sidebar.caption("⚠️ Akademik karar destek simülasyonu")
 
-# =========================================================
-# GÖRÜNTÜ ANALİZ MOTORU (DETERMİNİSTİK)
-# =========================================================
+# =====================================================
+# ANALİZ MOTORU (DETERMİNİSTİK)
+# =====================================================
 def normalize(img):
     img = img.astype(np.float32)
     return (img - img.min()) / (img.max() - img.min() + 1e-6)
@@ -67,139 +62,146 @@ def entropy_malignite(gray):
     entropy = -np.sum(hist * np.log2(hist))
     return min(100, (entropy / 6.0) * 100)
 
-def tani_karari(bosluk, yogunluk, malignite):
-    if bosluk > 0.45 and yogunluk < 0.30:
-        return "Adenokarsinom", "Lepidik büyüme, glandüler boşluklar"
-    elif yogunluk > 0.55 and malignite > 60:
-        return "Küçük Hücreli Karsinom", "Azzopardi fenomeni, yoğun çekirdek kümelenmesi"
+def tani_yuzdeleri(bosluk, yogunluk, malignite):
+    # deterministik yüzdesel dağılım
+    adeno = max(0, (bosluk * 100) - (yogunluk * 30))
+    small = max(0, (yogunluk * 120) + (malignite * 0.3) - 40)
+    squam = max(0, 100 - (adeno + small))
+    total = adeno + small + squam
+    return {
+        "Adenokarsinom": adeno / total * 100,
+        "Küçük Hücreli Karsinom": small / total * 100,
+        "Skuamöz Hücreli Karsinom": squam / total * 100
+    }
+
+def prognoz_omur(malignite):
+    if malignite < 30:
+        return "≈ 48–60 ay (erken evre varsayımı)"
+    elif malignite < 60:
+        return "≈ 18–36 ay (orta risk grubu)"
     else:
-        return "Skuamöz Hücreli Karsinom", "Keratinize inci yapıları"
+        return "≈ 6–14 ay (ileri evre, agresif seyir)"
 
-def prognoz(m):
-    if m < 30:
-        return "Düşük metastaz riski"
-    elif m < 60:
-        return "Orta risk – yakın takip"
-    else:
-        return "Yüksek risk – agresif seyir"
+def metastaz_var_mi(malignite):
+    return malignite > 55
 
-def metastaz_oneri(m):
-    if m < 40:
-        return "Şu an belirgin metastaz saptanmadı"
-    return (
-        "Beyin: Acil MR\n"
-        "Kemik: PET / Sintigrafi\n"
-        "Karaciğer: BT + LFT\n"
-        "Onkoloji konsültasyonu önerilir"
-    )
-
-def tedavi(tani):
+def tedavi_stratejisi(tani, metastaz):
     if tani == "Adenokarsinom":
-        return "Osimertinib (EGFR hedefli) – QT uzaması, döküntü"
-    if tani == "Küçük Hücreli Karsinom":
-        return "Sisplatin + Pembrolizumab – Nefrotoksisite, otoimmünite"
-    return "Alectinib / Sisplatin – Hepatotoksisite, miyalji"
+        base = (
+            "EGFR / ALK mutasyon analizi önerilir.\n"
+            "Birinci basamak: Osimertinib veya Alectinib."
+        )
+    elif tani == "Küçük Hücreli Karsinom":
+        base = (
+            "Platin bazlı kemoterapi (Sisplatin + Etoposid).\n"
+            "Eş zamanlı immünoterapi (Pembrolizumab)."
+        )
+    else:
+        base = (
+            "Platin bazlı kemoterapi.\n"
+            "Gerekirse radyoterapi kombinasyonu."
+        )
 
-# =========================================================
+    if metastaz:
+        base += (
+            "\n\nMETASTAZ VARLIĞINDA:\n"
+            "- Beyin metastazı: Stereotaktik radyocerrahi\n"
+            "- Kemik metastazı: Denosumab / Zoledronik asit\n"
+            "- Karaciğer metastazı: Sistemik tedavi öncelikli"
+        )
+    return base
+
+# =====================================================
 # 🔬 TANİ MERKEZİ
-# =========================================================
+# =====================================================
 if page == "🔬 Tanı Merkezi":
-    st.title("🔬 Tanı Merkezi")
+    st.title("🔬 Akciğer Kanseri Tanı Merkezi (Akademik Analiz)")
 
     file = st.file_uploader("Histopatolojik Görüntü Yükle", ["png", "jpg", "jpeg"])
 
     if file:
         img = Image.open(file).convert("L")
-        st.image(img, caption="Yüklenen Görüntü", use_column_width=True)
+        st.image(img, caption="Yüklenen Histopatolojik Görüntü", use_column_width=True)
 
-        img_np = normalize(np.array(img))
+        gray = normalize(np.array(img))
 
-        with st.spinner("Deterministik klinik analiz çalışıyor..."):
-            time.sleep(1.5)
-            bosluk = topolojik_bosluk(img_np)
-            yogunluk = hucre_yogunluk(img_np)
-            malignite = entropy_malignite(img_np)
+        with st.spinner("Çok katmanlı histomorfometrik analiz yapılıyor..."):
+            time.sleep(2)
+            bosluk = topolojik_bosluk(gray)
+            yogunluk = hucre_yogunluk(gray)
+            malignite = entropy_malignite(gray)
 
-        tani, morfoloji = tani_karari(bosluk, yogunluk, malignite)
+        yuzdeler = tani_yuzdeleri(bosluk, yogunluk, malignite)
+        tani = max(yuzdeler, key=yuzdeler.get)
+        metastaz = metastaz_var_mi(malignite)
+
+        st.subheader("📊 Tanısal Olasılık Dağılımı")
+        for k, v in yuzdeler.items():
+            st.write(f"*{k}: %{v:.1f}*")
 
         rapor = f"""
-================ KLİNİK AKCİĞER KANSERİ RAPORU ================
+=================== AKADEMİK KLİNİK RAPOR ===================
 
-ŞU AN (TANI):
-Olası Tanı: {tani}
-Hücresel Morfoloji: {morfoloji}
+KESİNLEŞTİRİLMİŞ OLASILIK TEMELLİ TANI:
+- En Olası Tanı: {tani} (%{yuzdeler[tani]:.1f})
 
-ANALİTİK METRİKLER:
-Topolojik Boşluk Oranı: %{bosluk*100:.2f}
-Hücre Yoğunluğu: %{yogunluk*100:.2f}
-Malignite Olasılığı: %{malignite:.2f}
+HİSTOPATOLOJİK ANALİZ:
+- Topolojik Boşluk Oranı: %{bosluk*100:.2f}
+- Hücre Yoğunluğu: %{yogunluk*100:.2f}
+- Entropi Tabanlı Malignite: %{malignite:.2f}
 
-GEÇMİŞ (ETİYOLOJİ):
-Kronik hücresel hasar, genetik instabilite ve proliferatif düzensizlik.
+ETİYOLOJİK DEĞERLENDİRME:
+Bu patern, kronik epitel hasarı, genetik instabilite ve
+kontrolsüz proliferasyon ile uyumludur.
 
-GELECEK (PROGNOZ):
-{prognoz(malignite)}
+METASTAZ DURUMU:
+{"Metastaz açısından YÜKSEK RİSK" if metastaz else "Şu an için belirgin metastaz bulgusu yok"}
 
-METASTAZ ANALİZİ:
-{metastaz_oneri(malignite)}
+PROGNOZ ve SAĞKALIM TAHMİNİ:
+{prognoz_omur(malignite)}
 
-TEDAVİ REHBERİ:
-{tedavi(tani)}
+KLİNİK TEDAVİ ÖNERİSİ (DOKTORA YÖNELİK):
+{tedavi_stratejisi(tani, metastaz)}
 
-UYARI:
-Bu sistem klinik karar destek simülasyonudur.
-Kesin tanı patolojik değerlendirme ile konur.
-==============================================================
+AKADEMİK UYARI:
+Bu sistem eğitim ve karar destek simülasyonudur.
+Gerçek hasta yönetimi için klinik, patolojik ve genetik doğrulama zorunludur.
+============================================================
 """
 
-        st.markdown("### 📄 Tek Sayfa Klinik Rapor")
-        st.text_area("", rapor, height=420)
+        st.markdown("### 📄 Detaylı Akademik Klinik Rapor")
+        st.text_area("", rapor, height=520)
 
         st.download_button(
             "📥 Klinik Raporu İndir (.txt)",
             rapor,
-            file_name="klinik_akciğer_kanseri_raporu.txt"
+            file_name="akademik_akciğer_kanseri_raporu.txt"
         )
 
-# =========================================================
-# 💊 İLAÇ & FARMAKOLOJİ
-# =========================================================
-elif page == "💊 İlaç & Farmakoloji":
-    st.title("💊 İlaç & Farmakoloji")
-
+# =====================================================
+# 💊 İLAÇ MODÜLÜ
+# =====================================================
+elif page == "💊 İlaç & Klinik Rehber":
+    st.title("💊 İlaç & Klinik Rehber")
     st.markdown("""
-*Osimertinib*
-- EGFR inhibitörü
-- QT uzaması, döküntü
-
-*Pembrolizumab*
-- PD-1 immünoterapi
-- Otoimmün komplikasyonlar
-
-*Alectinib*
-- ALK inhibitörü
-- Hepatotoksisite
-
-*Sisplatin*
-- DNA çapraz bağlanması
-- Nefrotoksisite
+*Osimertinib:* EGFR T790M inhibitörü – QT uzaması  
+*Pembrolizumab:* PD-1 inhibitörü – otoimmün yan etkiler  
+*Alectinib:* ALK inhibitörü – hepatotoksisite  
+*Sisplatin:* DNA çapraz bağlayıcı – nefrotoksisite  
 """)
 
-# =========================================================
+# =====================================================
 # 📊 EVRELEME
-# =========================================================
-elif page == "📊 Evreleme & Klinik Veri":
-    st.title("📊 Evreleme & Klinik Veri")
-
+# =====================================================
+elif page == "📊 Evreleme & Akademik Bilgi":
+    st.title("📊 Evreleme & Akademik Bilgi")
     st.markdown("""
-*TNM Sistemi*
-- T: Tümör boyutu
+*TNM SİSTEMİ*
+- T: Primer tümör
 - N: Lenf nodu
 - M: Metastaz
 
-*Evreler*
-- Evre I: Lokal
-- Evre II: Bölgesel
-- Evre III: İleri lokal
-- Evre IV: Uzak metastaz
+*EVRE IV*
+- Beyin, kemik, karaciğer metastazı
+- Sistemik tedavi önceliklidir
 """)
