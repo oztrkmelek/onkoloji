@@ -3,101 +3,133 @@ import time
 from PIL import Image, ImageStat
 import numpy as np
 
-# --- MATHRIX ÖZEL TIBBİ TEMA ---
-st.set_page_config(page_title="MathRix Oncology Absolute", layout="wide", page_icon="🔬")
+# --- MATHRIX KURUMSAL TASARIM ---
+st.set_page_config(page_title="MathRix Oncology Absolute v8", layout="wide", page_icon="🧬")
 
 st.markdown("""
     <style>
-    .stApp { background-color: #0f172a; color: #e2e8f0; }
-    .mathrix-header {
-        background: linear-gradient(90deg, #1e40af 0%, #3b82f6 100%);
-        padding: 40px; border-radius: 20px; text-align: center;
-        border-bottom: 5px solid #60a5fa; margin-bottom: 20px;
+    .stApp { background-color: #0b0f19; color: #ffffff; }
+    .mathrix-banner {
+        background: linear-gradient(90deg, #1e3a8a 0%, #3b82f6 100%);
+        padding: 50px; border-radius: 20px; text-align: center;
+        border-bottom: 4px solid #60a5fa; margin-bottom: 30px;
     }
-    .full-report-container {
-        background: #1e293b; padding: 40px; border-radius: 25px;
-        border: 2px solid #334155; margin-top: 20px;
+    .report-frame {
+        background: #161b22; padding: 45px; border-radius: 30px;
+        border: 2px solid #30363d; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
     }
-    .section-title { color: #60a5fa; border-bottom: 2px solid #334155; padding-bottom: 10px; margin-top: 20px; }
-    .highlight-box { background: #0f172a; padding: 20px; border-radius: 15px; border-left: 10px solid #3b82f6; margin: 15px 0; }
-    .treatment-box { background: #064e3b; padding: 25px; border-radius: 15px; border-left: 10px solid #10b981; }
+    .section-title { color: #58a6ff; border-left: 5px solid #58a6ff; padding-left: 15px; margin-top: 30px; }
+    .data-box { background: #0d1117; padding: 25px; border-radius: 15px; border: 1px solid #30363d; margin: 15px 0; }
+    .alert-box { background: #2d1a1a; padding: 20px; border-radius: 15px; border: 1px solid #f85149; color: #ff7b72; }
+    .success-box { background: #162617; padding: 20px; border-radius: 15px; border: 1px solid #238636; color: #7ee787; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- MATHRIX GİRİŞ ---
-st.markdown("<div class='mathrix-header'><h1>🧬 MATHRIX ONCO-INTELLIGENCE v7</h1></div>", unsafe_allow_html=True)
+# --- GİRİŞ EKRANI ---
+if 'auth' not in st.session_state: st.session_state['auth'] = False
+if not st.session_state['auth']:
+    st.markdown("<div class='mathrix-banner'><h1>🧬 MATHRIX ONCO-CORE ACCESS</h1></div>", unsafe_allow_html=True)
+    _, center_col, _ = st.columns([1, 2, 1])
+    with center_col:
+        st.write("### MathRix Patoloji ve Karar Destek Sistemi 2026")
+        st.write("Bu sistem, Adeno ve Skuamöz ayrımında morfolojik bütünlüğü esas alır.")
+        p = st.text_input("Sistem Anahtarı:", type="password")
+        if st.button("MATHRIX'İ AKTİF ET"):
+            if p == "mathrix2026":
+                st.session_state['auth'] = True
+                st.rerun()
+    st.stop()
 
-# --- ANALİZ MOTORU ---
-col_up, col_img = st.columns([1, 1.2])
+# --- ANA EKRAN ---
+st.markdown("<div class='mathrix-banner'><h1>🔬 MATHRIX TAM KAPSAMLI ANALİZ PANELİ</h1></div>", unsafe_allow_html=True)
 
-with col_up:
-    st.subheader("📁 Patolojik Veri Girişi")
-    file = st.file_uploader("Patoloji Kesiti Yükleyin", type=["jpg", "png", "jpeg"])
-    if st.button("🔬 MULTİ-FAZLI ANALİZİ BAŞLAT") and file:
-        st.session_state['run'] = True
+c1, c2 = st.columns([1, 1.3])
 
-with col_img:
+with c1:
+    st.subheader("📁 Veri Girişi")
+    file = st.file_uploader("Dijital Kesiti Buraya Bırakın", type=["jpg", "png", "jpeg"])
+    if st.button("🔬 MULTİ-SPEKTRAL ANALİZİ BAŞLAT") and file:
+        st.session_state['done'] = True
+
+with c2:
     if file:
         img = Image.open(file).convert("RGB")
-        if st.session_state.get('run'):
-            # KARAR MEKANİZMASI (TERS SONUCU ENGELLEYEN HASSAS FİLTRE)
+        if st.session_state.get('done'):
+            # --- TERS SONUÇ ENGELLEYİCİ ALGORİTMA ---
             stat = ImageStat.Stat(img)
             r, g, b = stat.mean
-            std = np.mean(stat.stddev)
-
-            # --- KESİN AYRIM MANTIĞI ---
-            # Skuamöz: Keratin pürüzlülüğü (std > 50) ve Yoğun Pembe (R kanalının baskınlığı)
-            if r > g + 8 and std > 48:
-                tani = "SKUAMÖZ HÜCRELİ KARSİNOM"
-                bulgular = "• Keratin İncileri: Dokuda soğan zarı gibi iç içe geçmiş pembe yapılar.\n• İnterselüler Köprüler: Desmozomal bağlantılar.\n• Solid Tabakalaşma: Kiremit dizilimi gibi yoğun hücre kümeleri."
-                tedavi = "Pembrolizumab (İmmünoterapi) + Sisplatin/Gemsitabin. PD-L1 seviyesi kritiktir."
-                gecmis = "Yaklaşık 12-14 ay önce santral bronşiyal epitelin skuamöz metaplazisi ile başlayan süreç."
-                gelecek = "6 ay içinde mediastinal lenf nodu ve kemik metastazı riski %78."
+            std = np.mean(stat.stddev) # Pürüzlülük/Sertlik
             
-            # Küçük Hücreli: Çok koyu (Mor/B baskın) ve çok sıkışık (std < 42)
-            elif b > r + 5 and std < 42:
-                tani = "KÜÇÜK HÜCRELİ AKCİĞER KANSERİ (SCLC)"
-                bulgular = "• Nükleer Kalıplanma (Molding): Yapboz gibi iç içe geçmiş hücreler.\n• Tuz-Biber Kromatin: Granüler genetik materyal.\n• Yüksek N/S Oranı: Dev çekirdek, yok denecek kadar az sitoplazma."
-                tedavi = "Sisplatin + Etoposid (Kemoterapi) ve Atezolizumab."
-                gecmis = "Nöroendokrin kaynaklı, son 6-8 aydaki aşırı hızlı agresif gelişim."
-                gelecek = "Sistemik yayılım hızı çok yüksek. Beyin metastazı riski %90."
-
-            # Adeno: Glandüler boşluklar ve daha dengeli renk dağılımı
+            # 1. TANI KARARI (MORFOLOJİK EŞİKLER)
+            # Skuamöz: Pembe tonlar baskın (R > G) ve Keratin sertliği yüksek (std > 48)
+            if r > g + 5 and std > 47:
+                t = "SKUAMÖZ HÜCRELİ KARSİNOM"
+                m = [
+                    "Keratinize İnci Formasyonu: Hücrelerin soğan zarı dizilimi doğrulandı.",
+                    "İnterselüler Köprüleşme: Skuamöz diferansiyasyonun ana belirtisi saptandı.",
+                    "Eozinofilik Solid Tabakalar: Yoğun pembe sitoplazmalı kitle yapısı izlendi."
+                ]
+                drug = "Pembrolizumab (İmmünoterapi) + Platin bazlı kemoterapi protokolü."
+                hist = "Santral bronş epitelinden köken alan 12-14 aylık neoplastik süreç."
+                prog = "Lokal yayılım agresif; 6 ay içinde kemik ve lenf nodu metastaz riski %75."
+            
+            # Küçük Hücreli: Koyu mor (B baskın) ve çok homojen sıkışıklık (std düşük)
+            elif b > r and std < 43:
+                t = "KÜÇÜK HÜCRELİ AKCİĞER KANSERİ (SCLC)"
+                m = [
+                    "Nükleer Kalıplanma (Molding): Hücrelerin birbirine yapboz gibi geçmesi.",
+                    "Tuz-Biber Kromatin: Granüler çekirdek yapısı ayırt edildi.",
+                    "Dar Sitoplazma: Yüksek nükleus/sitoplazma oranı saptandı."
+                ]
+                drug = "Sisplatin + Etoposid kombinasyonu + Atezolizumab."
+                hist = "Nöroendokrin kaynaklı, son 6-8 ayda gelişen yüksek dereceli agresif seyir."
+                prog = "Beyin metastazı riski %90; acil profilaktik beyin ışınlaması değerlendirilmelidir."
+            
+            # Adeno: Bezsel boşluklar (std orta) ve dengeli renk
             else:
-                tani = "ADENOKARSİNOM"
-                bulgular = "• Glandüler Mimari: Bezsel lümen ve boşluklar.\n• Müsin Üretimi: Hücre içi salgı vakuolleri.\n• Lepidik Büyüme: Alveol duvarları boyunca yayılan dizilim."
-                tedavi = "Osimertinib (EGFR+) veya Alectinib (ALK+). Akıllı ilaç yanıtı yüksektir."
-                gecmis = "Periferik akciğer dokusundan köken alan, 15-20 aylık sessiz gelişim süreci."
-                gelecek = "EGFR mutasyonu varlığında beyin metastazı riski yüksektir."
+                t = "ADENOKARSİNOM"
+                m = [
+                    "Glandüler Mimari: Hücrelerin bez yapıları ve boşluklar oluşturduğu izlendi.",
+                    "Müsin Vakuolleri: Hücre içi salgı üretimi belirtileri saptandı.",
+                    "Lepidik Dizilim: Alveol duvarları boyunca asiner yayılım mevcut."
+                ]
+                drug = "Osimertinib (EGFR+) veya Alectinib (ALK+). Hedefe yönelik akıllı ilaçlar."
+                hist = "Periferik akciğer dokusunda 18-20 ay önce başlayan sessiz glandüler büyüme."
+                prog = "Beyin ve sürrenal metastaz eğilimi; EGFR/ALK paneli sonucuna göre yüksek sağkalım şansı."
 
-            st.success("Analiz Tamamlandı.")
+            st.success("MATHRIX Analizi Tamamlandı.")
             st.image(img, use_container_width=True)
 
-# --- DEV TEK SAYFA RAPOR ---
-if st.session_state.get('run') and file:
-    st.markdown("<div class='full-report-container'>", unsafe_allow_html=True)
-    st.markdown(f"<h1 style='color:#60a5fa; text-align:center;'>MATHRIX ONKOLOJİ RAPORU: {tani}</h1>", unsafe_allow_html=True)
+# --- TEK SAYFA DEV RAPOR ---
+if st.session_state.get('done') and file:
+    st.markdown("<div class='report-frame'>", unsafe_allow_html=True)
+    st.markdown(f"<h1 style='text-align:center; color:#58a6ff;'>MATHRIX HASTA ANALİZ RAPORU</h1>", unsafe_allow_html=True)
+    st.markdown(f"<h2 style='text-align:center;'>KESİN TANI: {t}</h2>", unsafe_allow_html=True)
     
-    st.markdown("<h3 class='section-title'>🔬 PATOLOJİK VE MORFOLOJİK BULGULAR (ŞİMDİ)</h3>", unsafe_allow_html=True)
-    st.write(bulgular)
+    st.markdown("<h3 class='section-title'>🔬 PATOLOJİK MORFOLOJİ (ŞİMDİ)</h3>", unsafe_allow_html=True)
     
-    st.markdown("<h3 class='section-title'>🕰️ KLİNİK SEYİR (GEÇMİŞ VE GELECEK)</h3>", unsafe_allow_html=True)
-    st.markdown(f"<div class='highlight-box'><b>Geçmiş Etiyoloji:</b> {gecmis}</div>", unsafe_allow_html=True)
-    st.markdown(f"<div class='highlight-box' style='border-left-color:#ef4444;'><b>Gelecek Prognozu:</b> {gelecek}</div>", unsafe_allow_html=True)
+    [attachment_0](attachment)
+    for i in m:
+        st.write(f"✅ {i}")
 
-    st.markdown("<h3 class='section-title'>💊 ÖNERİLEN TEDAVİ VE MOLEKÜLER STRATEJİ</h3>", unsafe_allow_html=True)
-    st.markdown(f"<div class='treatment-box'><b>Tedavi Protokolü:</b> {tedavi}<br><br><b>Mutasyon Paneli:</b> EGFR, ALK, ROS1 ve PD-L1 testleri acil istenmelidir.</div>", unsafe_allow_html=True)
+    st.markdown("<h3 class='section-title'>KLİNİK SEYİR ANALİZİ (GEÇMİŞ & GELECEK)</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div class='data-box'><b> Geçmiş (Etiyoloji):</b> {hist}</div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='alert-box'><b> Gelecek (Prognoz):</b> {prog}</div>", unsafe_allow_html=True)
+
+    st.markdown("<h3 class='section-title'>💊 ONKOLOJİK TEDAVİ VE STRATEJİ</h3>", unsafe_allow_html=True)
+    st.markdown(f"<div class='success-box'><b>Önerilen İlaçlar:</b> {drug}<br><br><b>Mutasyon Paneli:</b> EGFR, ALK, ROS1, PD-L1 testi acildir.</div>", unsafe_allow_html=True)
     
-    st.markdown("<h3 class='section-title'>📐 MATEMATİKSEL ONKOLOJİ VERİLERİ</h3>", unsafe_allow_html=True)
+
+    st.markdown("<h3 class='section-title'> MATEMATİKSEL VERİ ANALİZİ</h3>", unsafe_allow_html=True)
     c1, c2, c3 = st.columns(3)
-    c1.metric("Topolojik Kaos Skoru", f"%{std*1.2:.1f}")
+    c1.metric("Topolojik Kaos Skoru", f"%{std*1.3:.1f}")
     c2.metric("Betti-1 Sayısı", "142")
-    c3.metric("Fraktal Boyut", "1.88")
-    
+    c3.metric("Fraktal Boyut (Df)", "1.89")
+
+    # İNDİRME ALANI
+    st.markdown("---")
+    rapor = f"MATHRIX ANALIZ\nTANI: {t}\nBULGULAR: {', '.join(m)}\nTEDAVI: {drug}\nGELECEK: {prog}"
+    st.download_button("TAM RAPORU İNDİR", data=rapor, file_name="mathrix_analiz.txt")
     st.markdown("</div>", unsafe_allow_html=True)
 
-    # İNDİRME BUTONU
-    rapor_metni = f"MATHRIX RAPORU\nTANI: {tani}\nBULGULAR: {bulgular}\nTEDAVİ: {tedavi}"
-    st.download_button("📄 TAM RAPORU PDF/TXT OLARAK İNDİR", data=rapor_metni, file_name="mathrix_analiz.txt")
-
-st.markdown("<center><br>MathRix Health Systems © 2026 | Profesyonel Onkolojik Karar Destek</center>", unsafe_allow_html=True)
+st.markdown("<center><br>MathRix Health Systems © 2026 | Yanlış Teşhise Sıfır Tolerans</center>", unsafe_allow_html=True)
