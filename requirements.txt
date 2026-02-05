@@ -3,3 +3,5 @@ numpy
 pandas
 Pillow
 openpyxl
+python-docx
+pdfplumber
