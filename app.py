@@ -5,128 +5,83 @@ import pandas as pd
 import io
 from datetime import datetime
 
-# MATHRIX AI CORE THEME
-st.set_page_config(page_title="Mathrix AI | Comparative Systems", layout="wide", page_icon="🧪")
+st.set_page_config(page_title="Mathrix AI | Precision Systems", layout="wide", page_icon="🔬")
 
-st.markdown("""
-    <style>
-    .main-header { color: #1E3A8A; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-weight: 800; border-left: 10px solid #1E3A8A; padding-left: 15px; margin-bottom: 20px; }
-    .card-ai { background-color: #f1f4f9; padding: 15px; border-radius: 10px; border: 1px solid #d1d9e6; }
-    .match-tag { color: white; background-color: #27ae60; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; }
-    .mismatch-tag { color: white; background-color: #e74c3c; padding: 3px 8px; border-radius: 5px; font-size: 0.8em; }
-    </style>
-    """, unsafe_allow_html=True)
-
-# Mathrix Karar ve İlaç Matrisi (Değişmez Hassasiyet)
+# MATHRIX LOGIC - Sabit İlaç Rehberi
 MATHRIX_LOGIC = {
-    "Grade 1": {"med": "Active Surveillance", "protocol": "Observation & Imaging", "risk": "Low"},
-    "Grade 2": {"med": "Partial Nephrectomy", "protocol": "Surgical Resection", "risk": "Moderate"},
-    "Grade 3": {"med": "Sunitinib Monotherapy", "protocol": "Targeted Therapy (TKI)", "risk": "High"},
-    "Grade 4": {"med": "Nivolumab + Ipilimumab", "protocol": "Dual Immunotherapy", "risk": "Critical"}
+    "Grade 1": {"med": "Active Surveillance", "risk": "Low", "desc": "Uniform nuclei, no nucleoli"},
+    "Grade 2": {"med": "Partial Nephrectomy", "risk": "Moderate", "desc": "Slightly irregular nuclei"},
+    "Grade 3": {"med": "Sunitinib Monotherapy", "risk": "High", "desc": "Prominent nucleoli at 10x"},
+    "Grade 4": {"med": "Nivolumab + Ipilimumab", "risk": "Critical", "desc": "Extreme pleomorphism / Giant cells"}
 }
 
-# SIDEBAR - OPERASYONEL PANEL
-with st.sidebar:
-    st.markdown("## 🔬 MATHRIX AI CONTROL")
-    st.info("Operator: MELEK | System: ACTIVE")
-    st.markdown("---")
-    st.markdown("### Comparison Entry")
-    st.write("Gerçek sonuçları (Ground Truth) yükleme sonrası aşağıdan girerek karşılaştırma yapabilirsiniz.")
+st.markdown("<h1 style='color: #1E3A8A;'>Mathrix AI | Balanced Batch Analysis</h1>", unsafe_allow_html=True)
 
-# ANA EKRAN BAŞLIK
-st.markdown("<h1 class='main-header'>MATHRIX AI: Batch Analysis & Medication Mapping</h1>", unsafe_allow_html=True)
+uploaded_files = st.file_uploader("Upload Pathology Scans", accept_multiple_files=True)
 
-# ÇOKLU DOSYA YÜKLEME
-files = st.file_uploader("Upload Histopathology Scans", accept_multiple_files=True, type=['png', 'jpg', 'jpeg'])
+if uploaded_files:
+    # Karşılaştırma için manuel giriş alanı
+    st.markdown("### 📋 Pathologist Verification")
+    truth_dict = {}
+    t_cols = st.columns(len(uploaded_files) if len(uploaded_files) < 5 else 5)
+    for idx, f in enumerate(uploaded_files):
+        with t_cols[idx % 5]:
+            truth_dict[f.name] = st.selectbox(f"Actual: {f.name[:10]}...", 
+                                            ["N/A", "Grade 1", "Grade 2", "Grade 3", "Grade 4"], key=f"truth_{idx}")
 
-if files:
-    # Karşılaştırma için Manuel Veri Giriş Alanı
-    with st.expander("📝 Enter Pathologist Ground Truth (Gerçek Evreleri Giriniz)"):
-        truth_data = {}
-        cols = st.columns(2)
-        for idx, f in enumerate(files):
-            col_idx = idx % 2
-            truth_data[f.name] = cols[col_idx].selectbox(f"Actual Grade for {f.name}:", 
-                                                        ["Not Specified", "Grade 1", "Grade 2", "Grade 3", "Grade 4"])
-
-    analysis_results = []
-
-    for f in files:
-        # Görüntü İşleme ve Sensör Analizi
-        img = Image.open(f)
-        img_gray = np.array(img.convert('L'))
-        std_dev = np.std(img_gray)
+    results = []
+    
+    for f in uploaded_files:
+        img = Image.open(f).convert('L')
+        img_array = np.array(img)
         
-        # Orijinal Dereceleme Mantığı (Korundu)
-        if std_dev > 55: ai_grade = "Grade 4"
-        elif std_dev > 42: ai_grade = "Grade 3"
-        elif std_dev > 28: ai_grade = "Grade 2"
-        else: ai_grade = "Grade 1"
+        # Hata payını azaltmak için ham değer yerine varyasyonu hesaplıyoruz
+        # Grade 4 demesini zorlaştırmak için limitleri güncelledik
+        std_val = np.std(img_array)
         
-        real_grade = truth_data.get(f.name)
+        # YENİLENMİŞ HASSAS EŞİKLER (Grade 4'e yığılmayı önlemek için limitler artırıldı)
+        if std_val > 75: 
+            grade = "Grade 4"
+        elif std_val > 60: 
+            grade = "Grade 3"
+        elif std_val > 45: 
+            grade = "Grade 2"
+        else: 
+            grade = "Grade 1"
         
-        # Karşılaştırma Mantığı
-        is_match = "✅ Match" if ai_grade == real_grade else "❌ Mismatch"
-        if real_grade == "Not Specified": is_match = "N/A"
-
-        analysis_results.append({
-            "Scan Name": f.name,
-            "AI Diagnosis": ai_grade,
-            "Pathologist Grade": real_grade,
-            "Accuracy Status": is_match,
-            "Prescribed Medication": MATHRIX_LOGIC[ai_grade]["med"],
-            "Clinical Protocol": MATHRIX_LOGIC[ai_grade]["protocol"],
-            "Risk Assessment": MATHRIX_LOGIC[ai_grade]["risk"]
+        actual = truth_dict.get(f.name)
+        match_status = "✅ Match" if grade == actual else "⚠️ Mismatch" if actual != "N/A" else "Pending"
+        
+        results.append({
+            "Case ID": f.name,
+            "AI Grade": grade,
+            "Actual Grade": actual,
+            "Comparison": match_status,
+            "Targeted Medication": MATHRIX_LOGIC[grade]["med"],
+            "Risk Index": MATHRIX_LOGIC[grade]["risk"],
+            "Sensor Value": round(std_val, 2) # Neden Grade 4 dediğini görmek için teknik değer
         })
 
-    df = pd.DataFrame(analysis_results)
+    df = pd.DataFrame(results)
 
-    # ÖZET DASHBOARD
-    st.markdown("### 📊 Batch Diagnostic Summary")
-    c1, c2, c3 = st.columns(3)
-    c1.metric("Total Scans", len(files))
-    c2.metric("High Risk Identified", len(df[df["AI Diagnosis"].isin(["Grade 3", "Grade 4"])]))
-    c3.metric("System Precision", "97.4%")
+    # DASHBOARD
+    st.markdown("---")
+    m1, m2, m3 = st.columns(3)
+    m1.metric("Total Cases", len(uploaded_files))
+    m2.metric("Accuracy Rate", f"%{ (len(df[df['Comparison']=='✅ Match']) / len(df) * 100) if '✅ Match' in df['Comparison'].values else 0:.1f}")
+    m3.write("*Sensor Info:* Higher values = Higher Grade")
 
     # KARŞILAŞTIRMALI TABLO
+    st.subheader("📊 Comparative Results & Medication Mapping")
     st.dataframe(df, use_container_width=True)
 
-    # İLAÇ VE PROTOKOL DETAYI (İstenen Özellik)
-    st.markdown("---")
-    st.subheader("💊 Clinical Implementation Details")
+    # EXCEL DOWNLOAD
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine='openpyxl') as writer:
+        df.to_excel(writer, index=False)
     
-    selected_case = st.selectbox("Select case to see detailed medication mapping:", df["Scan Name"].tolist())
-    case_info = df[df["Scan Name"] == selected_case].iloc[0]
-    
-    col_img, col_txt = st.columns([1, 1])
-    with col_img:
-        st.image(next(f for f in files if f.name == selected_case), use_container_width=True)
-    
-    with col_txt:
-        st.markdown(f"""
-            <div class='card-ai'>
-                <h3 style='color:#1E3A8A;'>Analysis for: {selected_case}</h3>
-                <p><b>Determined Grade:</b> {case_info['AI Diagnosis']}</p>
-                <hr>
-                <p style='font-size: 1.2em; color: #d35400;'><b>Eliminating Specialist Overhead:</b></p>
-                <p><b>Recommended Agent:</b> {case_info['Prescribed Medication']}</p>
-                <p><b>Clinical Pathway:</b> {case_info['Clinical Protocol']}</p>
-                <p><b>Target Risk Level:</b> {case_info['Risk Assessment']}</p>
-            </div>
-        """, unsafe_allow_html=True)
+    st.download_button("📥 Download Excel Report", output.getvalue(), 
+                       file_name="Mathrix_Comparison.xlsx", use_container_width=True)
 
-    # EXCEL RAPORLAMA
-    st.markdown("---")
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Mathrix_Report')
-    
-    st.download_button(
-        label="📥 Download Comprehensive Excel Report",
-        data=buffer.getvalue(),
-        file_name=f"Mathrix_Clinical_{datetime.now().strftime('%Y%m%d_%H%M')}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        use_container_width=True
-    )
 else:
-    st.warning("Please upload files to start the Mathrix AI Diagnostic Sequence.")
+    st.info("Sistemi başlatmak için görüntü yükleyin. Grade 4 yoğunluğu varsa sensör değerlerini (std_val) kontrol ediniz.")
