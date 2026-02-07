@@ -1,8 +1,7 @@
 streamlit
 numpy
-pandas
+pandase
 Pillow
 scikit-image
 xlsxwriter
 opencv-python
-
