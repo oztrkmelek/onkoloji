@@ -1,11 +1,6 @@
-dash
-dash-bootstrap-components
-plotly
+streamlit
 numpy
 opencv-python-headless
-scipy
-scikit-image
-scikit-learn
 pandas
-openpyxl
 pillow
+scikit-image
