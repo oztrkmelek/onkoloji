@@ -1,3 +1,4 @@
+!pip install dash dash-bootstrap-components plotly opencv-python-headless scikit-image scikit-learn pandas openpyxl pillow
 import numpy as np
 import cv2
 from scipy import ndimage
@@ -901,3 +902,4 @@ if _name_ == '_main_':
     print("="*80 + "\n")
     
     app.run_server(debug=True, port=8050)
+
