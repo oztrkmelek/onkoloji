@@ -98,13 +98,15 @@ upload = st.file_uploader("Upload Renal Histopathology Slide", type=['png', 'jpg
 if upload:
     img_raw = Image.open(upload).convert("RGB")
 
+    # Vision Logic Integration
     with st.spinner("Performing Hybrid GLCM Recalibration..."):
         grade, risk_map, m = run_hybrid_vision(np.array(img_raw))
 
     final_key = "Stage IV (M1)" if m1_override else grade
     db_node = CLINICAL_DB_V5[final_key]
 
-    t1, t2, t3 = st.tabs(["⌒ Vision Diagnostics", "⌑ Surgical Strategies", "⌑ Systemic Protocols"])
+    # Primary Diagnostics Tab
+    t1, t2, t3 = st.tabs(["። Vision Diagnostics", "፡ Surgical Strategies", "፡ Systemic Protocols"])
 
     with t1:
         if m1_override: st.error("☐ GLOBAL OVERRIDE STATUS: Metastatic Protocol (Stage IV) is currently prioritized.")
@@ -127,9 +129,9 @@ if upload:
         st.subheader("Pathologist Truth Comparison")
         truth = st.selectbox("Input Verified Ground Truth Grade", ["Grade 1", "Grade 2", "Grade 3", "Grade 4"])
         if grade == truth:
-            st.success(f"✅ Validation Status: MATCH - AI and Pathologist in agreement ({truth})")
+            st.success(f"**Validation Status: MATCH - AI and Pathologist in agreement ({truth})**")
         else:
-            st.warning(f"☐ Validation Status: DISCORDANCE - AI: {grade} vs Pathologist: {truth}")
+            st.warning(f"**Validation Status: DISCORDANCE - AI: {grade} vs Pathologist: {truth}**")
 
     with t2:
         st.header(f"Surgical Management for {final_key}")
