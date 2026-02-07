@@ -5,132 +5,113 @@ from PIL import Image
 import io
 import cv2
 from skimage import feature
-from datetime import datetime
 
-# --- MATHRIX AI: ACADEMIC STYLING ---
-st.set_page_config(page_title="MathRIX AI | Clinical Oncology", layout="wide")
+# --- ACADEMIC UI CONFIGURATION ---
+st.set_page_config(page_title="MathRIX AI | Oncology Suite", layout="wide")
 
+# Custom CSS for Professional Medical Look
 st.markdown("""
     <style>
-    .report-card { 
-        background-color: #ffffff; padding: 20px; border-radius: 15px; 
-        border-left: 10px solid #0A2351; box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-        margin-bottom: 20px;
+    .stApp { background-color: #0e1117; color: #ffffff; }
+    .status-card {
+        background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+        padding: 25px; border-radius: 15px; border: 1px solid #334155;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5); margin-bottom: 20px;
     }
-    .metric-card { background-color: #f0f4f8; padding: 15px; border-radius: 12px; text-align: center; border: 1px solid #d1d9e6; }
-    h1, h2, h3 { color: #0A2351; }
+    .metric-value { font-size: 2.2rem; font-weight: 700; color: #38bdf8; }
+    .drug-box { background-color: #1e1b4b; border-left: 5px solid #6366f1; padding: 15px; margin: 10px 0; border-radius: 5px; }
+    .survival-text { font-size: 2rem; color: #f87171; font-weight: bold; }
     </style>
     """, unsafe_allow_html=True)
 
-# --- CLINICAL ONTOLOGY ---
-DATABASE = {
-    "Clear Cell RCC": {
-        "Grade 1": {"med": "Active Surveillance", "surv": "96%", "color": "#27ae60"},
-        "Grade 2": {"med": "Partial Nephrectomy", "surv": "88%", "color": "#f1c40f"},
-        "Grade 3": {"med": "TKI Therapy (Sunitinib)", "surv": "67%", "color": "#e67e22"},
-        "Grade 4": {"med": "IO Doublet (Nivo + Ipi)", "surv": "35%", "color": "#c0392b"}
-    }
+# --- CLINICAL INTELLIGENCE CORE ---
+# [cite: 2026-02-03] Full medication and survival mapping
+DECISION_LOGIC = {
+    "Grade 1": {"med": "Active Surveillance", "surv": "96%", "risk": "LOW", "color": "#10b981"},
+    "Grade 2": {"med": "Partial Nephrectomy", "surv": "88%", "risk": "MODERATE", "color": "#f59e0b"},
+    "Grade 3": {"med": "Adjuvant TKI (Sunitinib)", "surv": "67%", "risk": "HIGH", "color": "#f97316"},
+    "Grade 4": {"med": "Nivolumab + Ipilimumab", "surv": "35%", "risk": "CRITICAL", "color": "#ef4444"}
 }
 
-# --- PRECISION ANALYSIS ENGINE ---
-def process_image_robustly(img_np):
-    # Pre-processing to handle blur and noise
-    # 
-    normalized = cv2.normalize(img_np, None, 0, 255, cv2.NORM_MINMAX).astype('uint8')
-    denoised = cv2.fastNlMeansDenoising(normalized, None, 10, 7, 21)
-    
-    # Texture analysis for ISUP Grading
-    lbp = feature.local_binary_pattern(denoised, 8, 1, method="uniform")
+def analyze_specimen(img_np):
+    # Denoising for blurred images
+    clean = cv2.fastNlMeansDenoising(img_np, None, 10, 7, 21)
+    # Texture Complexity (ISUP Standard)
+    lbp = feature.local_binary_pattern(clean, 8, 1, method="uniform")
     score = np.std(lbp)
-    
-    # Heatmap generation
-    laplacian = cv2.Laplacian(denoised, cv2.CV_64F)
-    heatmap = cv2.applyColorMap(cv2.normalize(np.abs(laplacian), None, 0, 255, cv2.NORM_MINMAX).astype('uint8'), cv2.COLORMAP_JET)
-    
+    # Heatmap
+    lap = cv2.Laplacian(clean, cv2.CV_64F)
+    heatmap = cv2.applyColorMap(cv2.normalize(np.abs(lap), None, 0, 255, cv2.NORM_MINMAX).astype('uint8'), cv2.COLORMAP_JET)
     return score, heatmap
 
-# --- SIDEBAR & CONTROLS ---
+# --- SIDEBAR CONTROL PANEL ---
 with st.sidebar:
-    st.image("https://cdn-icons-png.flaticon.com/512/3843/3843118.png", width=70)
-    st.title("MathRIX AI v2.0")
-    subtype = st.selectbox("Cancer Subtype", ["Clear Cell RCC"])
-    m_status = st.toggle("Metastatic Involvement (M1 Stage)")
+    st.markdown("### 🧬 *MathRIX AI Control*")
+    m_stage = st.toggle("🚨 METASTASIS (M1) ACTIVE", help="Toggle if secondary lesions are detected")
     st.write("---")
-    st.caption("Standardizing ISUP/WHO Renal Grading")
+    st.caption("v2.4 Final Academic Build")
 
-st.markdown("# 🔬 MathRIX AI: High-Fidelity Diagnostics")
+# --- MAIN INTERFACE ---
+st.title("🔬 MathRIX AI: Computational Oncology Platform")
+st.markdown("---")
 
-uploaded_files = st.file_uploader("Upload Pathology Specimens", accept_multiple_files=True)
+uploads = st.file_uploader("Drop Specimen Scans Here", accept_multiple_files=True)
 
-if uploaded_files:
-    reports = []
-    for file in uploaded_files:
-        raw_img = Image.open(file).convert('L')
-        img_np = np.array(raw_img)
+if uploads:
+    final_logs = []
+    for up in uploads:
+        img = Image.open(up).convert('L')
+        img_np = np.array(img)
         
-        # Core Analysis
-        score, h_map = process_image_robustly(img_np)
+        # Core Computation
+        complexity, thermal = analyze_specimen(img_np)
         
-        # Grading Logic (Dynamic Thresholds)
-        if score > 1.25: grade = "Grade 4"
-        elif score > 0.85: grade = "Grade 3"
-        elif score > 0.45: grade = "Grade 2"
-        else: grade = "Grade 1"
+        # Dynamic Grading
+        if complexity > 1.3: g = "Grade 4"
+        elif complexity > 0.9: g = "Grade 3"
+        elif complexity > 0.5: g = "Grade 2"
+        else: g = "Grade 1"
         
-        # Clinical Data Mapping
-        base_info = DATABASE[subtype][grade]
+        # Clinical Data Adjustment [cite: 2026-02-03]
+        base = DECISION_LOGIC[g]
+        final_med = "Doublet IO (Nivolumab + Cabozantinib)" if m_stage else base["med"]
+        final_surv = "15-18%" if m_stage else base["surv"]
         
-        # [cite: 2026-02-03] Metastasis override logic
-        if m_status:
-            med = "Combo (Nivolumab + Cabozantinib)"
-            surv = "15-18%"
-            risk = "CRITICAL (M1)"
-        else:
-            med = base_info["med"]
-            surv = base_info["surv"]
-            risk = "Standard Risk"
-
-        # --- UI LAYOUT ---
-        st.markdown(f"### Case Report: {file.name}")
-        c1, c2, c3 = st.columns([2, 1, 1.5])
-        
-        with c1:
-            h_map_rgb = cv2.cvtColor(h_map, cv2.COLOR_BGR2RGB)
-            blended = Image.blend(Image.open(file).convert("RGB"), Image.fromarray(h_map_rgb), alpha=0.45)
-            st.image(blended, use_container_width=True, caption="Topological Heatmap (WSI)")
+        # UI RENDERING
+        with st.container():
+            st.markdown(f"### Specimen ID: {up.name}")
+            col1, col2, col3 = st.columns([2, 1, 1.5])
             
-        with c2:
-            h, w = img_np.shape
-            roi = img_np[h//2-120:h//2+120, w//2-120:w//2+120]
-            st.image(roi, use_container_width=True, caption="Smart Zoom ROI")
-            st.markdown(f"<div class='metric-card'>Complexity Index<br><h2>{score:.3f}</h2></div>", unsafe_allow_html=True)
-            
-        with c3:
-            st.markdown(f"""
-                <div class="report-card">
-                    <h2 style="color:{base_info['color']}; margin-top:0;">{grade}</h2>
-                    <p><b>Prognosis:</b> {risk}</p>
-                    <hr>
-                    <p style="margin-bottom:5px;"><b>Recommended Protocol:</b></p>
-                    <p style="font-size:1.1em; color:#0A2351;"><b>{med}</b></p>
-                    <hr>
-                    <p style="margin-bottom:5px;"><b>Survival Projection:</b></p>
-                    <p style="font-size:1.5em; color:#c0392b;"><b>{surv}</b></p>
-                </div>
-            """, unsafe_allow_html=True)
+            with col1:
+                st.markdown("<p style='color:#94a3b8;'>SPATIAL THERMAL MAP</p>", unsafe_allow_html=True)
+                thermal_rgb = cv2.cvtColor(thermal, cv2.COLOR_BGR2RGB)
+                blended = Image.blend(Image.open(up).convert("RGB"), Image.fromarray(thermal_rgb), alpha=0.45)
+                st.image(blended, use_container_width=True)
+                
+            with col2:
+                st.markdown("<p style='color:#94a3b8;'>SMART ZOOM (ROI)</p>", unsafe_allow_html=True)
+                h, w = img_np.shape
+                st.image(img_np[h//2-100:h//2+100, w//2-100:w//2+100], use_container_width=True)
+                st.markdown(f"<div class='metric-value'>{complexity:.3f}</div><p>Chaos Index</p>", unsafe_allow_html=True)
+                
+            with col3:
+                st.markdown(f"""
+                    <div class="status-card">
+                        <h2 style="color:{base['color']}; margin:0;">{g}</h2>
+                        <p style="color:#94a3b8;">RISK: {"METASTATIC CRITICAL" if m_stage else base['risk']}</p>
+                        <hr style="border-color:#334155;">
+                        <div class="drug-box">
+                            <small>TARGETED MEDICATION</small><br>
+                            <b>{final_med}</b>
+                        </div>
+                        <p style="margin-top:15px; margin-bottom:0;">5-YEAR SURVIVAL PROJECTION</p>
+                        <div class="survival-text">{final_surv}</div>
+                    </div>
+                """, unsafe_allow_html=True)
 
-        reports.append({
-            "Specimen": file.name, "Prediction": grade, "Ground_Truth": "", 
-            "Complexity": round(score, 4), "Therapy": med, "Survival": surv
-        })
+        final_logs.append({"Specimen": up.name, "Prediction": g, "Actual_Ground_Truth": "", "Medication": final_med, "Survival": final_surv})
 
-    # --- VALIDATION REPORT ---
-    st.markdown("---")
-    final_df = pd.DataFrame(reports)
-    st.subheader("Clinical Data Aggregation & Validation")
-    st.table(final_df)
-    
-    excel_out = io.BytesIO()
-    with pd.ExcelWriter(excel_out, engine='openpyxl') as writer:
-        final_df.to_excel(writer, index=False)
-    st.download_button("📥 Export for Clinical Validation", excel_out.getvalue(), "MathRIX_Validation.xlsx", use_container_width=True)
+    # VALIDATION TABLE
+    st.markdown("### 📊 Clinical Validation Summary")
+    df = pd.DataFrame(final_logs)
+    st.data_editor(df, use_container_width=True) # Editlenebilir tablo (Excel gibi)
