@@ -1,26 +1,31 @@
+import streamlit as st
+from modules import image_processing, grading, clinical_guidelines, reporting, survival_prediction
 
-    # Institutional Report Export
-    report_df = pd.DataFrame({
-        "Physician": [st.session_state.doctor_name],
-        "Patient ID": [pid],
-        "AI Grade Prediction": [grade],
-        "Pathologist Ground Truth": [gtruth],
-        "Ensemble Score": [f"{m['Score']:.2f}"],
-        "Metastasis Status": ["M1" if m1_check else "M0"],
-        "Survival Forecast": [proto['OS']],
-        "Clinical Protocol": [proto['Med']],
-        "Physician Notes": [doc_notes]
-    })
+st.set_page_config(page_title="MathRIX AI v5.0", layout="wide")
 
-    buffer = io.BytesIO()
-    with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-        report_df.to_excel(writer, index=False, sheet_name='MathRIX_Audit_v6')
-    
-    st.sidebar.download_button(
-        label="📥 Download Institutional Audit (Excel)",
-        data=buffer.getvalue(),
-        file_name=f"MathRIX_v6_Audit_{pid}.xlsx",
-        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    )
-else:
-    st.info("Upload a histology image to initiate v6.0 diagnostic logic.")
+st.title("🧠 MathRIX AI v5.0")
+st.write("Tıbbi Görüntü Analiz ve Prognostik Tahmin Sistemi")
+
+# Sol panel - Görüntü yükleme
+uploaded_file = st.file_uploader("📤 Görüntü Yükle (CT/MRI/PET)", type=["png", "jpg", "jpeg"])
+
+if uploaded_file is not None:
+    st.image(uploaded_file, caption="Yüklenen Görüntü", use_column_width=True)
+
+    if st.button("🔍 Analiz Başlat"):
+        # Örnek özellik çıkarımı
+        features = image_processing.extract_glcm_features(uploaded_file)
+        grade_info = grading.calculate_grade(features)
+        treatment = clinical_guidelines.get_treatment_protocol(grade_info["grade"], metastasis=False)
+        survival = survival_prediction.predict_survival(grade_info["grade"])
+
+        # Sonuçları göster
+        st.subheader("📊 Analiz Sonuçları")
+        st.write(f"**Derece:** Grade {grade_info['grade']} (Skor: {grade_info['score']})")
+        st.write(f"**Tedavi Önerisi:** {treatment}")
+        st.write(f"**Sağkalım Tahmini:** {survival}")
+
+        # Rapor oluşturma
+        if st.button("📄 Rapor Oluştur"):
+            reporting.generate_report(uploaded_file, grade_info, treatment, survival)
+            st.success("Rapor başarıyla oluşturuldu!")
