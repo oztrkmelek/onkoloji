@@ -1,13 +1,7 @@
+"""streamlit
 numpy
 pandas
-scipy
+Pillow
 scikit-image
-opencv-python
-scikit-learn
-tensorflow
-torch
-pillow
-pyqt6
-streamlit
-openpyxl
-reportlab
+xlsxwriter
+opencv-python"""
