@@ -1,7 +1,7 @@
-print("--- Copy this into requirements.txt ---")
-print("""streamlit
+streamlit
 numpy
 pandas
 Pillow
 scikit-image
-xlsxwriter""")
+xlsxwriter
+
