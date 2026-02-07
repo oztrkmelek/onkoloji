@@ -5,140 +5,168 @@ import io
 from PIL import Image
 from skimage import color, feature, filters, util
 
-# --- Clinical Intelligence Database (2025-2026 NCCN/EAU Guidelines) ---
-CLINICAL_GUIDELINES = {
+# --- ADVANCED CLINICAL INTELLIGENCE DATABASE (2025-2026 Context) ---
+CLINICAL_DB_V4 = {
     "Grade 1": {
-        "Diagnosis": "Stage I / Low-Grade Localized RCC",
-        "Survival": "5-Year Overall Survival: ~95% | Progression-Free Survival (PFS): High",
-        "Treatment": "Nephron-Sparing Surgery (Partial Nephrectomy) preferred for tumors <= 4cm (T1a).",
-        "Adjuvant": "None indicated. Routine surveillance every 6-12 months.",
-        "Dosage": "N/A - Cerrahi odaklı takip."
+        "Status": "Localized / Low Risk",
+        "Surgical": "Partial Nephrectomy (NSS) preferred for T1a (<=4cm).",
+        "Adjuvant": "No adjuvant therapy indicated.",
+        "Survival": "5-year OS: >95%",
+        "Systemic": "N/A (Localized)"
     },
     "Grade 2": {
-        "Diagnosis": "Intermediate-Grade Localized RCC",
-        "Survival": "5-Year Overall Survival: ~80-85%",
-        "Treatment": "Partial Nephrectomy preferred; Radical Nephrectomy if tumor is central or T2.",
-        "Adjuvant": "Consider Adjuvant Pembrolizumab if high-risk features (pT2, Grade 4 or sarcomatoid) are present.",
-        "Dosage": "Pembrolizumab: 200mg IV every 3 weeks or 400mg every 6 weeks for up to 1 year."
+        "Status": "Localized / Intermediate Risk",
+        "Surgical": "Partial Nephrectomy (NSS) preferred; Radical if complex anatomy.",
+        "Adjuvant": "Pembrolizumab (200mg q3w) if pT2 and high-risk features present.",
+        "Survival": "5-year OS: ~85%",
+        "Systemic": "N/A (Localized)"
     },
     "Grade 3": {
-        "Diagnosis": "High-Grade Regional RCC",
-        "Survival": "5-Year Overall Survival: ~60-70% | Yüksek nüks riski.",
-        "Treatment": "Radical Nephrectomy with lymph node dissection if nodes are clinically enlarged.",
-        "Adjuvant": "Adjuvant Pembrolizumab is the standard of care for high-risk resected disease.",
-        "Dosage": "Pembrolizumab: 200mg q3w. Klinik çalışmalar TKI (ör. Sunitinib) önerebilir ancak IO tercih edilir."
+        "Status": "Regional / High Risk",
+        "Surgical": "Radical Nephrectomy + Lymph Node Dissection (if clinically indicated).",
+        "Adjuvant": "Standard: Adjuvant Pembrolizumab for 1 year.",
+        "Survival": "5-year OS: ~65%",
+        "Systemic": "N/A (Localized)"
     },
     "Grade 4": {
-        "Diagnosis": "Very High-Grade / Sarcomatoid RCC",
-        "Survival": "5-Year Overall Survival: ~40-55% | Agresif neoplastik davranış.",
-        "Treatment": "Aggressive Radical Nephrectomy. Erken sistemik tedavi için multidisipliner konsültasyon.",
-        "Adjuvant": "Strong recommendation for Adjuvant Immunotherapy (Pembrolizumab).",
-        "Dosage": "Pembrolizumab 200mg IV. Metastatik ilerleme açısından çok yakın takip gereklidir."
+        "Status": "Aggressive / Sarcomatoid Features",
+        "Surgical": "Extensive Radical Nephrectomy; consider venous thrombectomy if pT3a vascular invasion found.",
+        "Adjuvant": "Mandatory: Pembrolizumab consultation.",
+        "Survival": "5-year OS: <50%",
+        "Systemic": "Evaluate for early systemic involvement."
     },
-    "Stage IV (M1)": {
-        "Diagnosis": "Metastatic Renal Cell Carcinoma (Stage IV)",
-        "Survival": "Median OS: ~55.7 ay (IO-IO) | Median PFS: ~23.9 ay (IO-TKI).",
-        "Treatment": "Sistemik tedavi birincil seçenektir. Sitoredüktif nefrektomi seçili vakalarda düşünülür.",
-        "Adjuvant": "N/A (Sistemik Odaklı)",
-        "Dosage": "Seçenek A (IO-IO): Nivolumab 3mg/kg + Ipilimumab 1mg/kg q3w (4 doz).\nSeçenek B (IO-TKI): Lenvatinib 20mg PO günlük + Pembrolizumab 200mg IV q3w."
+    "Stage IV (M1) Override": {
+        "Status": "Metastatic Disease (Global Override Active)",
+        "Surgical": "Cytoreductive nephrectomy in selected patients only (IMDC risk stratified).",
+        "Adjuvant": "N/A (Systemic focus)",
+        "Systemic": "IO-IO: Nivolumab (3mg/kg) + Ipilimumab (1mg/kg) q3w x4 doses.\nIO-TKI: Lenvatinib (20mg daily) + Pembrolizumab (200mg q3w).",
+        "Supportive": "Bone: Bisphosphonates (Zoledronic acid 4mg q4w) or Denosumab (120mg q4w). Brain: SRS criteria.",
+        "Survival": "Median OS: ~55.7 months (Nivo+Ipi) | Median PFS: ~23.9 months (Lenv+Pembro)"
     }
 }
 
-# --- Advanced Vision Engine ---
-def process_pathology_vision(image_rgb):
-    # 1. Image Enhancement: Unsharp Mask
+# --- WEIGHTED TEXTURE SCORING ENGINE ---
+def calculate_diagnostics(image_rgb):
     gray = color.rgb2gray(image_rgb)
-    sharpened = filters.unsharp_mask(gray, radius=1.5, amount=2.0)
-
-    # 2. GLCM Feature Extraction
+    sharpened = filters.unsharp_mask(gray, radius=1.0, amount=1.5)
     u_img = util.img_as_ubyte(sharpened)
-    glcm = feature.graycomatrix(u_img, [1, 3], [0, np.pi/4, np.pi/2, 3*np.pi/4], 256, symmetric=True, normed=True)
-    contrast = feature.graycoprops(glcm, 'contrast').mean()
-    homogeneity = feature.graycoprops(glcm, 'homogeneity').mean()
 
-    # 3. Topological Risk Heatmap (Laplacian Variance)
+    # GLCM Metrics
+    glcm = feature.graycomatrix(u_img, [1, 3], [0, np.pi/2], 256, symmetric=True, normed=True)
+    metrics = {
+        'contrast': feature.graycoprops(glcm, 'contrast').mean(),
+        'dissimilarity': feature.graycoprops(glcm, 'dissimilarity').mean(),
+        'homogeneity': feature.graycoprops(glcm, 'homogeneity').mean(),
+        'correlation': feature.graycoprops(glcm, 'correlation').mean(),
+        'energy': feature.graycoprops(glcm, 'energy').mean()
+    }
+
+    # Weighted Scoring Logic (Mathematical Classifier)
+    metrics['weighted_score'] = (metrics['contrast'] * 0.4) + (metrics['dissimilarity'] * 0.3) - (metrics['homogeneity'] * 100 * 0.2) - (metrics['energy'] * 100 * 0.1)
+
+    if metrics['weighted_score'] > 150: grade = "Grade 4"
+    elif metrics['weighted_score'] > 80: grade = "Grade 3"
+    elif metrics['weighted_score'] > 30: grade = "Grade 2"
+    else: grade = "Grade 1"
+
+    # Heatmap
     lap = filters.laplace(gray)
     heatmap = filters.gaussian(np.abs(lap), sigma=3)
     heatmap = (heatmap - heatmap.min()) / (heatmap.max() - heatmap.min() + 1e-8)
 
-    # 4. Automated Grading Logic
-    if contrast > 280 or homogeneity < 0.12: pred_grade = "Grade 4"
-    elif contrast > 140: pred_grade = "Grade 3"
-    elif contrast > 65: pred_grade = "Grade 2"
-    else: pred_grade = "Grade 1"
+    return sharpened, heatmap, grade, metrics
 
-    return sharpened, heatmap, pred_grade, contrast, homogeneity
+# --- PROFESSIONAL STREAMLIT UI V4.0 ---
+st.set_page_config(page_title="MathRIX AI v4.0", page_icon="⚕ ", layout="wide")
+st.title("⚕ MathRIX AI v4.0 - Professional Academic Dashboard")
+st.markdown("**Digital Pathology & Clinical Oncology Decision Support System (2025-2026 Guidelines)**")
 
-# --- Streamlit Academic Dashboard UI ---
-st.set_page_config(page_title="MathRIX AI v3.0", layout="wide")
+# Sidebar Metadata
+st.sidebar.header("Patient Metadata")
+pid = st.sidebar.text_input("Patient Identifier", "RCC-2026-BETA")
+m1_toggle = st.sidebar.toggle("Metastatic Involvement (M1)", value=False)
+gtruth = st.sidebar.selectbox("Pathologist Verified Ground Truth (Grade)", ["Grade 1", "Grade 2", "Grade 3", "Grade 4"])
 
-st.title("⚕ MathRIX AI - Profesyonel Böbrek Kanseri Analiz Sistemi")
-st.markdown("**Akademik Karar Destek Sistemi (2025-2026 NCCN/EAU Rehberleri Entegrasyonu)**")
-
-# Sidebar
-st.sidebar.header("Hasta Verileri")
-pid = st.sidebar.text_input("Hasta Tanımlayıcı (ID)", "RCC-2026-X")
-m1_override = st.sidebar.toggle("Metastaz (M1) Belirlendi (Global Override)")
-
-upload = st.file_uploader("Patoloji Slaytı Yükle (H&E Görüntüsü)", type=['png', 'jpg', 'jpeg', 'tif'])
+upload = st.file_uploader("Upload Histopathology Image (H&E)", type=['png', 'jpg', 'jpeg', 'tif'])
 
 if upload:
     img_raw = Image.open(upload).convert("RGB")
 
-    with st.spinner("Görüntü Netleştiriliyor ve Neoplastik Karmaşıklık Analiz Ediliyor..."):
-        sharp, risk_map, grade, con, homo = process_pathology_vision(np.array(img_raw))
+    with st.spinner("Initializing Vision Engine & Weighted Classification..."):
+        sharp, risk_map, ai_grade, m = calculate_diagnostics(np.array(img_raw))
 
-    # Logic: Link Grade to Protocols
-    key = "Stage IV (M1)" if m1_override else grade
-    data = CLINICAL_GUIDELINES[key]
+    # Logic Mapping
+    active_key = "Stage IV (M1)" if m1_toggle else ai_grade
+    proto = CLINICAL_DB_V4[active_key]
 
-    # Tabs for Organization
-    tab1, tab2 = st.tabs(["Görüntüleme ve AI Analizi", "Klinik Protokol ve Tedavi Rehberi"])
+    # Academic Layout: Tabs
+    tab1, tab2 = st.tabs(["⌒ Vision Diagnostics & AI Analysis", "⌑ Clinical Protocols & Guidelines"])
 
     with tab1:
-        st.header("Vizyon Motoru Çıktıları")
-        col_m1, col_m2, col_m3 = st.columns(3)
-        col_m1.metric("AI Tahmini Derece (Grade)", grade)
-        col_m2.metric("Doku Kontrastı (GLCM)", f"{con:.2f}")
-        col_m3.metric("Topolojik Varyans", "Yüksek" if con > 200 else "Normal")
+        if m1_toggle:
+            st.error("☐ GLOBAL OVERRIDE STATUS: Metastatic Protocol (Stage IV) is currently prioritized.")
 
+        # Metric Grid
+        col_m1, col_m2, col_m3, col_m4 = st.columns(4)
+        col_m1.metric("AI Grade Prediction", ai_grade)
+        col_m2.metric("Contrast", f"{m['contrast']:.2f}")
+        col_m3.metric("Homogeneity", f"{m['homogeneity']:.4f}")
+        col_m4.metric("Weighted Texture Score", f"{m['weighted_score']:.1f}")
+
+        # Visual Expert Correlation
         v1, v2 = st.columns(2)
-        v1.image(sharp, caption="Netleştirilmiş (Sharpened) Histoloji", use_container_width=True)
-        v2.image(risk_map, caption="Topolojik Risk Haritası (Laplacian)", use_container_width=True, clamp=True)
+        v1.image(sharp, caption="Sharpened Histology Slide (Nuclear Detail Enhanced)", use_container_width=True)
+        v2.image(risk_map, caption="Topological Risk Heatmap (Neoplastic Complexity)", use_container_width=True, clamp=True)
+
+        # Validation & Discordance Section
+        st.divider()
+        st.subheader("Validation & Discordance Analysis")
+        if ai_grade == gtruth:
+            st.success(f"✅ AI Prediction matches Ground Truth ({gtruth}). Clinical confidence: High.")
+        else:
+            st.warning(f"☐ DISCORDANCE DETECTED: AI predicted {ai_grade} vs. Pathologist {gtruth}. Immediate review of morphological variance recommended.")
 
     with tab2:
-        st.header(f"Klinik Tanı ve Öneriler: {data['Diagnosis']}")
+        st.subheader(f"Targeted Management Strategy: {active_key}")
+        st.write(f"**Current Diagnostic Status:** {proto.get('Status', 'N/A')}")
         st.divider()
-        c1, c2 = st.columns(2)
-        with c1:
-            st.subheader("Cerrahi ve Adjuvan Plan")
-            st.write(f"**Cerrahi Öneri:** {data['Treatment']}")
-            st.write(f"**Adjuvan Strateji:** {data['Adjuvant']}")
-        with c2:
-            st.subheader("Sistemik Veriler ve Sağkalım")
-            st.write(f"**Sağkalım İstatistikleri:** {data['Survival']}")
-            st.write(f"**İlaç Dozaj Şeması:** {data['Dosage']}")
+
+        sc1, sc2 = st.columns(2)
+        with sc1:
+            st.markdown("#### Surgical & Adjuvant Scheme")
+            st.write(f"**Surgical Plan:** {proto.get('Surgical', 'N/A')}")
+            st.write(f"**Adjuvant Strategy:** {proto.get('Adjuvant', 'N/A')}")
+        with sc2:
+            st.markdown("#### Systemic & Survival Projections")
+            if m1_toggle:
+                st.write(f"**First-Line Seq:** {proto['FirstLine']}")
+                st.write(f"**Second-Line Seq:** {proto['SecondLine']}")
+                st.write(f"**Skeletal Support:** {proto['Supportive']}")
+            else:
+                st.write(f"**Systemic Action:** {proto.get('Systemic', 'N/A')}")
+            st.write(f"**Survival Statistic:** {proto['Survival']}")
 
     # Excel Report Generation
     report_df = pd.DataFrame({
         "Patient ID": [pid],
-        "Metastasis Status": ["Positive" if m1_override else "Negative"],
-        "AI Predicted Grade": [grade],
-        "Diagnosis": [data['Diagnosis']],
-        "Surgical Treatment": [data['Treatment']],
-        "Drug Dosage": [data['Dosage']],
-        "OS Statistics": [data['Survival']]
+        "Metastasis Override": ["ACTIVE" if m1_toggle else "INACTIVE"],
+        "AI Grade Prediction": [ai_grade],
+        "Pathologist Ground Truth": [gtruth],
+        "Discordance Margin": ["0%" if ai_grade == gtruth else "Discordance"],
+        "Weighted Score": [m['weighted_score']],
+        "Survival Projection": [proto['Survival']],
+        "Treatment Recommendation": [proto['Systemic'] if m1_toggle else proto['Surgical']]
     })
 
     buffer = io.BytesIO()
     with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-        report_df.to_excel(writer, index=False, sheet_name='MathRIX_Analysis')
+        report_df.to_excel(writer, index=False, sheet_name='Institutional_Analysis')
 
     st.sidebar.download_button(
-        label="↓ Klinik Raporu İndir (Excel)",
+        label="⎇ Download Academic Report (Excel)",
         data=buffer.getvalue(),
-        file_name=f"MathRIX_AI_Rapor_{pid}.xlsx",
+        file_name=f"MathRIX_AI_V4_{pid}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
 else:
-    st.info("Analizi başlatmak için lütfen bir patoloji slaytı yükleyin.")
+    st.info("Please upload a pathology slide to begin morphological analysis.")
