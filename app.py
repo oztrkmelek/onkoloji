@@ -83,14 +83,14 @@ upload = st.file_uploader("Upload Renal Histopathology Slide", type=['png', 'jpg
 
 if upload:
     img_raw = Image.open(upload).convert("RGB")
-
+    
     with st.spinner("Executing Ensemble Texture Scoring..."):
         grade, risk_map, m = run_ensemble_vision(np.array(img_raw))
 
     final_key = "Stage IV" if m1_check else grade
     proto = CLINICAL_KNOWLEDGE["Grade_Protocols"][final_key]
 
-    tab1, tab2, tab3 = st.tabs(["። Diagnostic Vision", "፡ Treatment Strategy", "፡ Academic Insight"])
+    tab1, tab2, tab3 = st.tabs(["Diagnostic Vision", "Treatment Strategy", "Academic Insight"])
 
     with tab1:
         col_m1, col_m2, col_m3 = st.columns(3)
@@ -123,7 +123,7 @@ if upload:
         "Patient ID": [pid],
         "AI Grade Prediction": [grade],
         "Pathologist Ground Truth": [gtruth],
-        "Ensemble Score": [f\"{m['Score']:.2f}\"],
+        "Ensemble Score": [f"{m['Score']:.2f}"],
         "Metastasis Status": ["M1" if m1_check else "M0"],
         "Survival Forecast": [proto['OS']],
         "Clinical Protocol": [proto['Med']],
@@ -135,7 +135,7 @@ if upload:
         report_df.to_excel(writer, index=False, sheet_name='MathRIX_Audit_v6')
     
     st.sidebar.download_button(
-        label="፧ Download Institutional Audit (Excel)",
+        label="📥 Download Institutional Audit (Excel)",
         data=buffer.getvalue(),
         file_name=f"MathRIX_v6_Audit_{pid}.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
