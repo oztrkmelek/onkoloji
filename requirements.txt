@@ -1,1 +1,8 @@
-print("streamlit\nnumpy\npandas\nPillow\nscikit-image\nxlsxwriter\nopencv-python")
+streamlit
+numpy
+pandas
+Pillow
+scikit-image
+xlsxwriter
+opencv-python
+
